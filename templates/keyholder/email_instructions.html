@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Management Instructions - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .instruction-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .command-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .feature-highlight {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .timer-controls {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-primary { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📧 Email Management Instructions</h1>
+            <nav>
+                <a href="{{ url_for('keyholder.dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">🏠 Main Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="feature-highlight">
+            <h2>🔐 **Keyholder-Only Access**</h2>
+            <p><strong>Important:</strong> Only the registered keyholder email address can approve, deny, or modify key requests. This ensures security and prevents unauthorized access.</p>
+        </div>
+
+        <div class="instruction-card">
+            <h2>📧 How Email Management Works</h2>
+            <p>When a user requests key release, you'll receive an email notification. You can manage the request by simply replying to that email with one of the commands below.</p>
+            
+            <h3>🔄 The Process:</h3>
+            <ol>
+                <li><strong>Request Made</strong> - User requests key release from the Raspberry Pi</li>
+                <li><strong>Email Sent</strong> - You receive immediate email notification</li>
+                <li><strong>Reply to Email</strong> - You reply with a simple command</li>
+                <li><strong>Action Processed</strong> - System processes your reply automatically</li>
+                <li><strong>Confirmation Sent</strong> - You receive confirmation email</li>
+            </ol>
+        </div>
+
+        <div class="instruction-card">
+            <h2>🎯 Available Commands</h2>
+            
+            <h3>✅ Basic Approval/Denial</h3>
+            <div class="command-example">
+                <strong>Approve:</strong> APPROVE<br>
+                <strong>Deny:</strong> DENY<br>
+                <strong>Emergency:</strong> EMERGENCY
+            </div>
+
+            <div class="timer-controls">
+                <h3>⏰ **Timer Control (Keyholder-Only Feature)**</h3>
+                <p><strong>As the registered keyholder, you have full control over the timer duration:</strong></p>
+                
+                <h4>📈 Extend Duration</h4>
+                <div class="command-example">
+                    <strong>Extend by 2 hours:</strong> EXTEND 2<br>
+                    <strong>Extend by 30 minutes:</strong> EXTEND 30 min<br>
+                    <strong>Extend by 1 day:</strong> EXTEND 1 day<br>
+                    <strong>Extend by 20 days:</strong> EXTEND 20 days<br>
+                    <strong>Extend by 1 week:</strong> EXTEND 1 week<br>
+                    <strong>Extend by 2 months:</strong> EXTEND 2 months<br>
+                    <strong>Extend by 1 year:</strong> EXTEND 1 year
+                </div>
+                
+                <h4>📉 Reduce Duration</h4>
+                <div class="command-example">
+                    <strong>Reduce to 1 hour:</strong> REDUCE 1<br>
+                    <strong>Reduce to 30 minutes:</strong> REDUCE 30 min<br>
+                    <strong>Reduce to 1 day:</strong> REDUCE 1 day<br>
+                    <strong>Reduce to 2 days:</strong> REDUCE 2 days<br>
+                    <strong>Reduce to 1 week:</strong> REDUCE 1 week<br>
+                    <strong>Reduce to 1 month:</strong> REDUCE 1 month
+                </div>
+                
+                <h4>🎛️ Modify Approved Requests</h4>
+                <p>You can even modify the duration of already approved requests:</p>
+                <div class="command-example">
+                    <strong>Change to 3 hours:</strong> MODIFY 3<br>
+                    <strong>Change to 20 days:</strong> MODIFY 20 days<br>
+                    <strong>Extend approved request:</strong> EXTEND 1 week<br>
+                    <strong>Reduce approved request:</strong> REDUCE 1 day
+                </div>
+                
+                <h4>⏱️ Supported Time Units</h4>
+                <div class="command-example">
+                    <strong>Minutes:</strong> 30 min, 1 minute, 45 mins<br>
+                    <strong>Hours:</strong> 2 h, 3 hours, 1.5 hrs<br>
+                    <strong>Days:</strong> 1 d, 5 days, 20 days<br>
+                    <strong>Weeks:</strong> 1 w, 2 weeks, 1 wk<br>
+                    <strong>Months:</strong> 1 m, 3 months, 6 mos<br>
+                    <strong>Years:</strong> 1 y, 1 year, 2 yrs
+                </div>
+            </div>
+
+            <h3>💬 With Reasons</h3>
+            <div class="command-example">
+                <strong>Deny with reason:</strong> DENY - not enough time<br>
+                <strong>Approve with condition:</strong> APPROVE - but be quick<br>
+                <strong>Extend with reason:</strong> EXTEND 2 - take your time
+            </div>
+        </div>
+
+        <div class="instruction-card">
+            <h2>📱 Mobile Examples</h2>
+            
+            <h3>iPhone/Mail App</h3>
+            <ol>
+                <li>Receive notification email</li>
+                <li>Tap "Reply"</li>
+                <li>Type: <code>EXTEND 2</code></li>
+                <li>Tap "Send"</li>
+                <li>Done! Duration extended by 2 hours</li>
+            </ol>
+            
+            <h3>Android/Gmail</h3>
+            <ol>
+                <li>Receive notification email</li>
+                <li>Tap "Reply"</li>
+                <li>Type: <code>REDUCE 1</code></li>
+                <li>Tap "Send"</li>
+                <li>Done! Duration reduced to 1 hour</li>
+            </ol>
+        </div>
+
+        <div class="instruction-card">
+            <h2>🔒 Security Features</h2>
+            
+            <h3>Keyholder Verification</h3>
+            <ul>
+                <li>✅ <strong>Email Verification</strong> - Only registered keyholder email can respond</li>
+                <li>✅ <strong>Request Validation</strong> - System verifies request exists and is pending</li>
+                <li>✅ <strong>Action Logging</strong> - All actions are logged with timestamps</li>
+                <li>✅ <strong>Confirmation Emails</strong> - You receive confirmation for all actions</li>
+            </ul>
+            
+            <h3>Timer Control Security</h3>
+            <ul>
+                <li>🔐 <strong>Keyholder-Only</strong> - Only you can modify timers</li>
+                <li>🔐 <strong>Request Validation</strong> - Can only modify your registered devices</li>
+                <li>🔐 <strong>Duration Limits</strong> - System prevents invalid durations</li>
+                <li>🔐 <strong>Audit Trail</strong> - All modifications are tracked</li>
+            </ul>
+        </div>
+
+        <div class="instruction-card">
+            <h2>📊 Timer Control Examples</h2>
+            
+            <h3>Scenario 1: User requests 2 hours, you want to give 3</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 1</code><br>
+                Result: Duration becomes 3 hours (2 + 1)
+            </div>
+            
+            <h3>Scenario 2: User requests 4 hours, you want to give 1</h3>
+            <div class="command-example">
+                Reply: <code>REDUCE 1</code><br>
+                Result: Duration becomes 1 hour
+            </div>
+            
+            <h3>Scenario 3: User requests 1 hour, you want to give 30 minutes</h3>
+            <div class="command-example">
+                Reply: <code>REDUCE 30 min</code><br>
+                Result: Duration becomes 30 minutes
+            </div>
+            
+            <h3>Scenario 4: User requests 2 hours, you want to give 6</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 4</code><br>
+                Result: Duration becomes 6 hours (2 + 4)
+            </div>
+            
+            <h3>Scenario 5: User requests 1 day, you want to give 20 days</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 19 days</code><br>
+                Result: Duration becomes 20 days (1 + 19)
+            </div>
+            
+            <h3>Scenario 6: User requests 1 week, you want to give 1 month</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 3 weeks</code><br>
+                Result: Duration becomes 1 month (1 week + 3 weeks)
+            </div>
+            
+            <h3>Scenario 7: User requests 2 months, you want to give 6 months</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 4 months</code><br>
+                Result: Duration becomes 6 months (2 + 4)
+            </div>
+            
+            <h3>Scenario 8: User requests 1 year, you want to give 2 years</h3>
+            <div class="command-example">
+                Reply: <code>EXTEND 1 year</code><br>
+                Result: Duration becomes 2 years (1 + 1)
+            </div>
+        </div>
+
+        <div class="instruction-card">
+            <h2>🚨 Emergency Situations</h2>
+            
+            <h3>Emergency Release</h3>
+            <div class="command-example">
+                <strong>Emergency command:</strong> EMERGENCY<br>
+                <strong>Result:</strong> Immediate release, notification sent to you
+            </div>
+            
+            <p><strong>Note:</strong> Emergency releases bypass all timers and immediately unlock the device. You'll receive an urgent notification.</p>
+        </div>
+
+        <div class="instruction-card">
+            <h2>🔧 Troubleshooting</h2>
+            
+            <h3>Common Issues</h3>
+            <ul>
+                <li><strong>Email not received:</strong> Check spam folder, verify email address</li>
+                <li><strong>Command not working:</strong> Ensure exact spelling, check for typos</li>
+                <li><strong>Timer not updating:</strong> Verify request is still pending</li>
+                <li><strong>No confirmation:</strong> Check email configuration</li>
+            </ul>
+            
+            <h3>Getting Help</h3>
+            <p>If you encounter issues:</p>
+            <ol>
+                <li>Check the logs in the web interface</li>
+                <li>Verify your email address is correctly registered</li>
+                <li>Test email configuration</li>
+                <li>Contact system administrator</li>
+            </ol>
+        </div>
+
+        <div class="feature-highlight">
+            <h2>🎉 **Keyholder Benefits**</h2>
+            <ul>
+                <li>✅ <strong>Full Timer Control</strong> - Modify durations as needed</li>
+                <li>✅ <strong>Remote Access</strong> - Manage from anywhere via email</li>
+                <li>✅ <strong>Mobile Friendly</strong> - Reply from any email app</li>
+                <li>✅ <strong>Secure</strong> - Only you can control your devices</li>
+                <li>✅ <strong>Instant</strong> - Real-time notifications and responses</li>
+                <li>✅ <strong>Flexible</strong> - Multiple ways to manage requests</li>
+            </ul>
+        </div>
+
+        <div class="instruction-section">
+            <h3>🔧 Configuration Management</h3>
+            <div class="command-example">
+                <div class="command">
+                    <strong>settings</strong>
+                </div>
+                <div class="description">
+                    <p>Request your current configuration file to edit settings via email.</p>
+                    <ul>
+                        <li>You'll receive a <code>config.txt</code> file with all your current settings</li>
+                        <li>Edit the values after the = sign</li>
+                        <li>Reply with the updated file attached</li>
+                        <li>Settings will be applied automatically</li>
+                    </ul>
+                    <p><strong>Example:</strong> Reply with "settings" to any ChastiPi email</p>
+                </div>
+            </div>
+            
+            <div class="command-example">
+                <div class="command">
+                    <strong>status</strong>
+                </div>
+                <div class="description">
+                    <p>Get a system status report with current statistics.</p>
+                    <ul>
+                        <li>Shows registered devices count</li>
+                        <li>Displays pending requests</li>
+                        <li>Lists recent configuration updates</li>
+                        <li>Provides quick command reference</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="command-example">
+                <div class="command">
+                    <strong>help</strong>
+                </div>
+                <div class="description">
+                    <p>Get a complete list of available email commands.</p>
+                    <ul>
+                        <li>Shows all supported commands</li>
+                        <li>Provides usage examples</li>
+                        <li>Lists time units supported</li>
+                        <li>Explains configuration file process</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p><strong>Remember:</strong> As the registered keyholder, you have complete control over key release requests and timer durations. Use this power responsibly!</p>
+        </footer>
+    </div>
+</body>
+</html> 

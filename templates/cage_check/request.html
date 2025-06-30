@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cage Check Request - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .notification-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .notification-info h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .notification-info ul {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Cage Check Request</h1>
+            <nav>
+                <a href="{{ url_for('cage_check.dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('main.dashboard') }}">Main Dashboard</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="notification-info">
+                <h4>📧 Email Notification System</h4>
+                <p>When you provide a wearer's email address, the system will automatically:</p>
+                <ul>
+                    <li><strong>Immediately:</strong> Send initial notification with verification code</li>
+                    <li><strong>After 1 hour:</strong> Send reminder if no response</li>
+                    <li><strong>After 6 hours:</strong> Send final warning</li>
+                    <li><strong>At expiry:</strong> Notify both wearer and keyholder</li>
+                </ul>
+                <p><em>Leave wearer email blank if you prefer manual notification only.</em></p>
+            </div>
+
+            <form id="cageCheckForm">
+                <div class="form-group">
+                    <label for="keyholder_email">Keyholder Email *</label>
+                    <input type="email" id="keyholder_email" name="keyholder_email" required 
+                           placeholder="your-email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="wearer_email">Wearer Email (Optional)</label>
+                    <input type="email" id="wearer_email" name="wearer_email" 
+                           placeholder="wearer-email@example.com">
+                    <small>If provided, wearer will receive automatic email notifications</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="device_name">Device Name *</label>
+                    <input type="text" id="device_name" name="device_name" required 
+                           placeholder="e.g., Chastity Cage, Lock Box, etc.">
+                </div>
+
+                <div class="form-group">
+                    <label for="check_type">Check Type</label>
+                    <select id="check_type" name="check_type">
+                        <option value="cage">Cage</option>
+                        <option value="lock">Lock</option>
+                        <option value="device">Device</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="reason">Reason (Optional)</label>
+                    <textarea id="reason" name="reason" 
+                              placeholder="Why is this verification needed?"></textarea>
+                </div>
+
+                <button type="submit" class="btn">Create Cage Check Request</button>
+            </form>
+
+            <div id="result"></div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('cageCheckForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Remove empty wearer email
+            if (!data.wearer_email) {
+                delete data.wearer_email;
+            }
+            
+            try {
+                const response = await fetch('/cage-check/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    document.getElementById('result').innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>✅ Request Created Successfully!</h4>
+                            <p><strong>Request ID:</strong> ${result.request.request_id}</p>
+                            <p><strong>Verification Code:</strong> ${result.request.verification_code}</p>
+                            <p><strong>Expires:</strong> ${new Date(result.request.expires_at).toLocaleString()}</p>
+                            ${result.request.wearer_email ? 
+                                `<p><strong>Email Notification:</strong> Sent to ${result.request.wearer_email}</p>` : 
+                                '<p><strong>Email Notification:</strong> None (manual notification required)</p>'
+                            }
+                            <p><strong>Instructions for Wearer:</strong></p>
+                            <ol>
+                                <li>Write code <strong>${result.request.verification_code}</strong> on paper</li>
+                                <li>Place next to ${result.request.check_type}</li>
+                                <li>Take photo and upload at: <a href="/cage-check/upload">Upload Page</a></li>
+                                <li>Use Request ID: <strong>${result.request.request_id}</strong></li>
+                            </ol>
+                        </div>
+                    `;
+                    
+                    // Clear form
+                    this.reset();
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <div class="alert alert-error">
+                            <h4>❌ Error</h4>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-error">
+                        <h4>❌ Error</h4>
+                        <p>Failed to create request: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

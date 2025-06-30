@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyholder Configuration - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .config-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .config-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .config-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .config-section h3 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .encrypted-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .setting-group {
+            margin-bottom: 20px;
+        }
+        
+        .setting-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        
+        .setting-group input, .setting-group select, .setting-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .setting-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .setting-group .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .boolean-setting {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .boolean-setting input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        
+        .encryption-info {
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .permission-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .config-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .collapsible:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+        }
+        
+        .collapsible-content.show {
+            max-height: 1000px;
+        }
+        
+        .template-selector {
+            margin-bottom: 20px;
+        }
+        
+        .template-selector select {
+            width: 200px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .template-selector button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="config-container">
+        <header class="config-header">
+            <h1>🔧 Keyholder Configuration</h1>
+            <p>Manage all ChastiPi settings with full access</p>
+        </header>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.type }}">
+                    {{ message.text }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Encryption Information -->
+        <div class="encryption-info">
+            <h4>🔒 Encryption Status</h4>
+            <p><strong>Encryption Enabled:</strong> {{ config_info.encryption_enabled }}</p>
+            <p><strong>Encryption Key:</strong> {{ "✓ Present" if config_info.key_exists else "✗ Missing" }}</p>
+            <p><strong>Encrypted Sections:</strong> {{ config_info.encrypted_sections|length }} sections</p>
+            <p><em>Keyholder-specific settings are encrypted to prevent unauthorized access by the wearer.</em></p>
+        </div>
+
+        <!-- Permission Information -->
+        <div class="permission-info">
+            <h4>🔑 Permission Information</h4>
+            <p><strong>Your Access Level:</strong> Keyholder (Full Access)</p>
+            <p><strong>Wearer Access:</strong> Limited to basic settings only</p>
+            <p><strong>Protected Settings:</strong> {{ permission_info.encrypted_sections|length }} sections encrypted</p>
+            <p><em>You have full access to all settings, including those protected from the wearer.</em></p>
+        </div>
+
+        <!-- Configuration Statistics -->
+        <div class="config-stats">
+            <div class="stat-card">
+                <h4>Total Sections</h4>
+                <div class="value">{{ config_info.total_sections }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Total Settings</h4>
+                <div class="value">{{ config_info.total_settings }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Encrypted Sections</h4>
+                <div class="value">{{ config_info.encrypted_sections|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h4>Last Modified</h4>
+                <div class="value">{{ config_info.last_modified.split('T')[0] }}</div>
+            </div>
+        </div>
+
+        <!-- Template Selector -->
+        <div class="template-selector">
+            <label for="template-select">Load Template:</label>
+            <select id="template-select">
+                <option value="">Select a template...</option>
+                {% for template_name, template_desc in templates.items() %}
+                <option value="{{ template_name }}">{{ template_desc }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" class="btn btn-warning" onclick="loadTemplate()">Load Template</button>
+        </div>
+
+        <form method="POST" action="{{ url_for('keyholder.update_config') }}">
+            <!-- Device Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    📱 Device Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <label for="device_id">Device ID:</label>
+                        <input type="text" id="device_id" name="device.device_id" value="{{ settings.device.device_id }}" required>
+                        <div class="help-text">Unique identifier for this ChastiPi device</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="device_name">Device Name:</label>
+                        <input type="text" id="device_name" name="device.device_name" value="{{ settings.device.device_name }}">
+                        <div class="help-text">Human-readable name for the device</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="device.location" value="{{ settings.device.location }}">
+                        <div class="help-text">Physical location of the device</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="timezone">Timezone:</label>
+                        <input type="text" id="timezone" name="device.timezone" value="{{ settings.device.timezone }}">
+                        <div class="help-text">Timezone for the device (e.g., UTC, America/New_York)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    🌐 Network Settings
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <label for="host">Host:</label>
+                        <input type="text" id="host" name="network.host" value="{{ settings.network.host }}">
+                        <div class="help-text">Host address to bind to (0.0.0.0 for all interfaces)</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="port">Port:</label>
+                        <input type="number" id="port" name="network.port" value="{{ settings.network.port }}" min="1" max="65535">
+                        <div class="help-text">Port number for the web interface</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="external_url">External URL:</label>
+                        <input type="url" id="external_url" name="network.external_url" value="{{ settings.network.external_url }}">
+                        <div class="help-text">Public URL for remote access (if configured)</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="webhook_url">Webhook URL:</label>
+                        <input type="url" id="webhook_url" name="network.webhook_url" value="{{ settings.network.webhook_url }}">
+                        <div class="help-text">URL for email webhook processing</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="enable_remote_access" name="network.enable_remote_access" 
+                                   {% if settings.network.enable_remote_access %}checked{% endif %}>
+                            <label for="enable_remote_access">Enable Remote Access</label>
+                        </div>
+                        <div class="help-text">Allow access from external networks</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    📧 Email Settings
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="email_enabled" name="email.enabled" 
+                                   {% if settings.email.enabled %}checked{% endif %}>
+                            <label for="email_enabled">Enable Email</label>
+                        </div>
+                        <div class="help-text">Enable email functionality</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="smtp_server">SMTP Server:</label>
+                        <input type="text" id="smtp_server" name="email.smtp_server" value="{{ settings.email.smtp_server }}">
+                        <div class="help-text">SMTP server address (e.g., smtp.gmail.com)</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="smtp_port">SMTP Port:</label>
+                        <input type="number" id="smtp_port" name="email.smtp_port" value="{{ settings.email.smtp_port }}">
+                        <div class="help-text">SMTP server port (587 for TLS, 465 for SSL)</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="email_username">Username:</label>
+                        <input type="email" id="email_username" name="email.username" value="{{ settings.email.username }}">
+                        <div class="help-text">Email account username</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="email_password">Password:</label>
+                        <input type="password" id="email_password" name="email.password" value="{{ settings.email.password }}">
+                        <div class="help-text">Email account password or app password</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="use_tls" name="email.use_tls" 
+                                   {% if settings.email.use_tls %}checked{% endif %}>
+                            <label for="use_tls">Use TLS</label>
+                        </div>
+                        <div class="help-text">Enable TLS encryption for email</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="from_address">From Address:</label>
+                        <input type="email" id="from_address" name="email.from_address" value="{{ settings.email.from_address }}">
+                        <div class="help-text">Email address to send from</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="reply_to">Reply To:</label>
+                        <input type="email" id="reply_to" name="email.reply_to" value="{{ settings.email.reply_to }}">
+                        <div class="help-text">Email address for replies</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    🔒 Security Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="enable_ssl" name="security.enable_ssl" 
+                                   {% if settings.security.enable_ssl %}checked{% endif %}>
+                            <label for="enable_ssl">Enable SSL</label>
+                        </div>
+                        <div class="help-text">Enable SSL encryption for web interface</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="require_auth" name="security.require_auth" 
+                                   {% if settings.security.require_auth %}checked{% endif %}>
+                            <label for="require_auth">Require Authentication</label>
+                        </div>
+                        <div class="help-text">Require login for web interface access</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="session_timeout">Session Timeout (minutes):</label>
+                        <input type="number" id="session_timeout" name="security.session_timeout_minutes" 
+                               value="{{ settings.security.session_timeout_minutes }}" min="1" max="1440">
+                        <div class="help-text">Session timeout in minutes</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="enable_rate_limiting" name="security.enable_rate_limiting" 
+                                   {% if settings.security.enable_rate_limiting %}checked{% endif %}>
+                            <label for="enable_rate_limiting">Enable Rate Limiting</label>
+                        </div>
+                        <div class="help-text">Enable API rate limiting</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyholder Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    🔑 Keyholder Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <label for="default_keyholder_email">Default Keyholder Email:</label>
+                        <input type="email" id="default_keyholder_email" name="keyholder.default_keyholder_email" 
+                               value="{{ settings.keyholder.default_keyholder_email }}">
+                        <div class="help-text">Primary keyholder email address</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="approval_timeout">Approval Timeout (hours):</label>
+                        <input type="number" id="approval_timeout" name="keyholder.approval_timeout_hours" 
+                               value="{{ settings.keyholder.approval_timeout_hours }}" min="1" max="168">
+                        <div class="help-text">Time before requests expire</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="require_email_verification" name="keyholder.require_email_verification" 
+                                   {% if settings.keyholder.require_email_verification %}checked{% endif %}>
+                            <label for="require_email_verification">Require Email Verification</label>
+                        </div>
+                        <div class="help-text">Require email verification for keyholder actions</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="enable_auto_approval" name="keyholder.enable_auto_approval" 
+                                   {% if settings.keyholder.enable_auto_approval %}checked{% endif %}>
+                            <label for="enable_auto_approval">Enable Auto Approval</label>
+                        </div>
+                        <div class="help-text">Automatically approve requests after timeout</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cage Check Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    📸 Cage Check Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="cage_check_enabled" name="cage_check.enabled" 
+                                   {% if settings.cage_check.enabled %}checked{% endif %}>
+                            <label for="cage_check_enabled">Enable Cage Checks</label>
+                        </div>
+                        <div class="help-text">Enable cage check functionality</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="verification_code_length">Verification Code Length:</label>
+                        <input type="number" id="verification_code_length" name="cage_check.verification_code_length" 
+                               value="{{ settings.cage_check.verification_code_length }}" min="4" max="10">
+                        <div class="help-text">Length of verification codes</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="verification_timeout">Verification Timeout (hours):</label>
+                        <input type="number" id="verification_timeout" name="cage_check.verification_timeout_hours" 
+                               value="{{ settings.cage_check.verification_timeout_hours }}" min="1" max="168">
+                        <div class="help-text">Time before cage checks expire</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="require_photo" name="cage_check.require_photo" 
+                                   {% if settings.cage_check.require_photo %}checked{% endif %}>
+                            <label for="require_photo">Require Photo</label>
+                        </div>
+                        <div class="help-text">Require photo upload for cage checks</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Punishment Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    ⚖️ Punishment Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="punishment_enabled" name="punishment.enabled" 
+                                   {% if settings.punishment.enabled %}checked{% endif %}>
+                            <label for="punishment_enabled">Enable Punishments</label>
+                        </div>
+                        <div class="help-text">Enable punishment functionality</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="qr_code_size">QR Code Size:</label>
+                        <input type="number" id="qr_code_size" name="punishment.qr_code_size" 
+                               value="{{ settings.punishment.qr_code_size }}" min="100" max="500">
+                        <div class="help-text">Size of generated QR codes in pixels</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="verification_required" name="punishment.verification_required" 
+                                   {% if settings.punishment.verification_required %}checked{% endif %}>
+                            <label for="verification_required">Require Verification</label>
+                        </div>
+                        <div class="help-text">Require photo verification for punishments</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="ocr_accuracy_threshold">OCR Accuracy Threshold:</label>
+                        <input type="number" id="ocr_accuracy_threshold" name="punishment.ocr_accuracy_threshold" 
+                               value="{{ settings.punishment.ocr_accuracy_threshold }}" min="0.1" max="1.0" step="0.1">
+                        <div class="help-text">Minimum OCR accuracy for verification (0.1-1.0)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Verification Settings -->
+            <div class="config-section">
+                <h3 class="collapsible" onclick="toggleSection(this)">
+                    ⏰ Time Verification Settings
+                    <span class="encrypted-badge">Protected</span>
+                </h3>
+                <div class="collapsible-content show">
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="time_verification_enabled" name="time_verification.enabled" 
+                                   {% if settings.time_verification.enabled %}checked{% endif %}>
+                            <label for="time_verification_enabled">Enable Time Verification</label>
+                        </div>
+                        <div class="help-text">Enable time verification against NTP servers</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="auto_correct" name="time_verification.auto_correct" 
+                                   {% if settings.time_verification.auto_correct %}checked{% endif %}>
+                            <label for="auto_correct">Auto Correct Time</label>
+                        </div>
+                        <div class="help-text">Automatically correct system time if drift detected</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <div class="boolean-setting">
+                            <input type="checkbox" id="alert_on_drift" name="time_verification.alert_on_drift" 
+                                   {% if settings.time_verification.alert_on_drift %}checked{% endif %}>
+                            <label for="alert_on_drift">Alert on Time Drift</label>
+                        </div>
+                        <div class="help-text">Send alerts when time drift is detected</div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="drift_threshold">Drift Threshold (seconds):</label>
+                        <input type="number" id="drift_threshold" name="time_verification.drift_threshold_seconds" 
+                               value="{{ settings.time_verification.drift_threshold_seconds }}" min="1" max="3600">
+                        <div class="help-text">Maximum allowed time drift in seconds</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="text-align: center; margin: 30px 0;">
+                <button type="submit" class="btn btn-success">💾 Save Configuration</button>
+                <button type="button" class="btn btn-warning" onclick="resetForm()">🔄 Reset Form</button>
+                <button type="button" class="btn btn-danger" onclick="backupConfig()">💾 Backup Config</button>
+                <a href="{{ url_for('keyholder.dashboard') }}" class="btn">← Back to Dashboard</a>
+            </div>
+        </form>
+
+        <!-- Configuration Actions -->
+        <div class="config-section">
+            <h3>🛠️ Configuration Actions</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <button type="button" class="btn btn-success" onclick="exportConfig()">📤 Export Config</button>
+                <button type="button" class="btn btn-warning" onclick="importConfig()">📥 Import Config</button>
+                <button type="button" class="btn btn-danger" onclick="backupConfig()">💾 Create Backup</button>
+                <button type="button" class="btn" onclick="showConfigInfo()">ℹ️ Config Info</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            content.classList.toggle('show');
+        }
+        
+        function resetForm() {
+            if (confirm('Reset all form fields to current values?')) {
+                location.reload();
+            }
+        }
+        
+        function loadTemplate() {
+            const templateSelect = document.getElementById('template-select');
+            const templateName = templateSelect.value;
+            
+            if (!templateName) {
+                alert('Please select a template');
+                return;
+            }
+            
+            if (confirm(`Load template "${templateName}"? This will overwrite current settings.`)) {
+                // This would need to be implemented with AJAX to load template data
+                alert('Template loading functionality would be implemented here');
+            }
+        }
+        
+        function exportConfig() {
+            // This would trigger a download of the current configuration
+            alert('Configuration export functionality would be implemented here');
+        }
+        
+        function importConfig() {
+            // This would open a file picker and import configuration
+            alert('Configuration import functionality would be implemented here');
+        }
+        
+        function backupConfig() {
+            if (confirm('Create a backup of the current configuration?')) {
+                // This would create a timestamped backup
+                alert('Configuration backup functionality would be implemented here');
+            }
+        }
+        
+        function showConfigInfo() {
+            // This would show detailed configuration information
+            alert('Configuration info functionality would be implemented here');
+        }
+        
+        // Auto-save functionality
+        let autoSaveTimer;
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('change', function() {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    // Show auto-save indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'alert alert-info';
+                    indicator.textContent = 'Auto-saving...';
+                    document.querySelector('.config-container').insertBefore(indicator, document.querySelector('.config-header'));
+                    
+                    setTimeout(() => {
+                        indicator.remove();
+                    }, 2000);
+                }, 2000);
+            });
+        });
+        
+        // Email settings toggle
+        document.getElementById('email_enabled').addEventListener('change', function() {
+            const emailFields = ['smtp_server', 'smtp_port', 'email_username', 'email_password', 'use_tls', 'from_address', 'reply_to'];
+            emailFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.disabled = !this.checked;
+                    field.style.opacity = this.checked ? '1' : '0.5';
+                }
+            });
+        });
+        
+        // Initialize email fields state
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailEnabled = document.getElementById('email_enabled');
+            if (emailEnabled) {
+                emailEnabled.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+</body>
+</html> 

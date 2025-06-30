@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyholder Dashboard - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .network-status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .network-local {
+            background-color: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .network-remote {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .email-priority {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .request-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .request-actions {
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-approve { background-color: #28a745; color: white; }
+        .btn-deny { background-color: #dc3545; color: white; }
+        .btn-extend { background-color: #ffc107; color: black; }
+        .btn-reduce { background-color: #17a2b8; color: white; }
+        .btn-emergency { background-color: #fd7e14; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Keyholder Dashboard</h1>
+            <nav>
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Main</a>
+                <a href="{{ url_for('keyholder.email_instructions') }}" class="btn btn-secondary">📧 Email Instructions</a>
+                <a href="{{ url_for('keyholder.configure_email') }}" class="btn btn-secondary">⚙️ Configure Email</a>
+                <a href="{{ url_for('keyholder_config.config_dashboard', keyholder_email=keyholder_email) }}" class="btn btn-secondary">🔧 Configuration</a>
+            </nav>
+        </header>
+
+        <!-- Network Status -->
+        <div class="network-status {% if is_remote %}network-remote{% else %}network-local{% endif %}">
+            <h3>🌐 Network Status</h3>
+            <p><strong>Your IP:</strong> {{ client_ip }}</p>
+            {% if is_remote %}
+                <p><strong>Status:</strong> Remote Access Detected</p>
+                <p>You're not on the same network as the Raspberry Pi. Email communication is recommended.</p>
+            {% else %}
+                <p><strong>Status:</strong> Local Network Access</p>
+                <p>You're on the same network as the Raspberry Pi. Both web interface and email work.</p>
+            {% endif %}
+        </div>
+
+        <!-- Email Priority Notice -->
+        <div class="email-priority">
+            <h3>📧 Email-First Communication</h3>
+            <p><strong>For the best experience, especially when not on the same network:</strong></p>
+            <ul>
+                <li>✅ <strong>Reply to emails</strong> - Works from anywhere, any device</li>
+                <li>✅ <strong>No network setup</strong> - No port forwarding or VPN required</li>
+                <li>✅ <strong>Mobile friendly</strong> - Reply from your phone's email app</li>
+                <li>✅ <strong>Instant notifications</strong> - Get notified immediately of requests</li>
+            </ul>
+            <p><a href="{{ url_for('keyholder.email_instructions') }}" class="btn btn-secondary">📖 View Email Instructions</a></p>
+        </div>
+
+        <!-- Pending Requests -->
+        <section>
+            <h2>⏳ Pending Key Requests</h2>
+            {% if pending_requests %}
+                {% for request in pending_requests %}
+                <div class="request-card">
+                    <h3>Device: {{ request.device_name or request.device_id }}</h3>
+                    <p><strong>Request ID:</strong> {{ request.request_id }}</p>
+                    <p><strong>Duration:</strong> {{ request.duration_hours }} hours</p>
+                    <p><strong>Reason:</strong> {{ request.reason or "No reason provided" }}</p>
+                    <p><strong>Requested:</strong> {{ request.requested_at }}</p>
+                    <p><strong>Status:</strong> {{ request.status }}</p>
+                    
+                    <div class="request-actions">
+                        <h4>Quick Actions:</h4>
+                        <a href="{{ url_for('keyholder.approve_request', request_id=request.request_id) }}?action=approve" 
+                           class="btn btn-approve">✅ Approve</a>
+                        <a href="{{ url_for('keyholder.approve_request', request_id=request.request_id) }}?action=deny" 
+                           class="btn btn-deny">❌ Deny</a>
+                        <a href="{{ url_for('keyholder.approve_request', request_id=request.request_id) }}?action=extend" 
+                           class="btn btn-extend">⏰ Extend</a>
+                        <a href="{{ url_for('keyholder.approve_request', request_id=request.request_id) }}?action=reduce" 
+                           class="btn btn-reduce">⏱️ Reduce</a>
+                        <a href="{{ url_for('keyholder.approve_request', request_id=request.request_id) }}?action=emergency" 
+                           class="btn btn-emergency">🚨 Emergency</a>
+                    </div>
+                    
+                    {% if is_remote %}
+                    <div class="email-priority" style="margin-top: 15px;">
+                        <p><strong>💡 Remote Access Tip:</strong> You can also reply to the email notification with:</p>
+                        <ul>
+                            <li><code>APPROVE</code> - to approve this request</li>
+                            <li><code>DENY</code> - to deny this request</li>
+                            <li><code>EXTEND 2</code> - to extend by 2 hours</li>
+                            <li><code>REDUCE 1</code> - to reduce to 1 hour</li>
+                            <li><code>EMERGENCY</code> - for emergency release</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No pending key requests.</p>
+            {% endif %}
+        </section>
+
+        <!-- Registered Devices -->
+        <section>
+            <h2>📱 Registered Devices</h2>
+            {% if devices %}
+                {% for device_id, device in devices.items() %}
+                <div class="request-card">
+                    <h3>{{ device.name or device_id }}</h3>
+                    <p><strong>Device ID:</strong> {{ device_id }}</p>
+                    <p><strong>Keyholder Email:</strong> {{ device.keyholder_email }}</p>
+                    <p><strong>Status:</strong> {{ device.status or "Unknown" }}</p>
+                    <p><strong>Registered:</strong> {{ device.registered_at or "Unknown" }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No devices registered.</p>
+                <a href="{{ url_for('keyholder.register_device') }}" class="btn btn-secondary">Register Device</a>
+            {% endif %}
+        </section>
+
+        <!-- Quick Actions -->
+        <section>
+            <h2>⚡ Quick Actions</h2>
+            <div class="request-actions">
+                <a href="{{ url_for('keyholder.register_device') }}" class="btn btn-secondary">📱 Register New Device</a>
+                <a href="{{ url_for('keyholder.configure_email') }}" class="btn btn-secondary">⚙️ Configure Email</a>
+                <a href="{{ url_for('keyholder.email_instructions') }}" class="btn btn-secondary">📖 Email Instructions</a>
+                <a href="{{ url_for('keyholder_config.config_dashboard', keyholder_email=keyholder_email) }}" class="btn btn-secondary">🔧 System Configuration</a>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Auto-refresh dashboard every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html> 

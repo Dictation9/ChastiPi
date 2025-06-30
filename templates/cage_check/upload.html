@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Cage Check Photo - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .upload-form {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        
+        .file-upload-area.dragover {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 3em;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .verification-result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .result-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+        
+        .result-success {
+            color: #28a745;
+        }
+        
+        .result-failed {
+            color: #dc3545;
+        }
+        
+        .ocr-details {
+            background: #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .code-box {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .code-box.expected {
+            border-color: #007bff;
+        }
+        
+        .code-box.found {
+            border-color: #28a745;
+        }
+        
+        .code-text {
+            font-family: monospace;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .instructions h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📸 Upload Cage Check Photo</h1>
+            <nav>
+                <a href="{{ url_for('cage_check.cage_check_dashboard') }}" class="nav-link">← Back to Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="upload-form">
+            <div class="form-card">
+                <h2>Photo Verification</h2>
+                
+                <div class="instructions">
+                    <h4>📋 How to Upload Your Verification Photo</h4>
+                    <ol>
+                        <li>Write the verification code provided by your keyholder on a piece of paper</li>
+                        <li>Place the paper next to your cage/lock</li>
+                        <li>Take a clear photo showing both the device and the code</li>
+                        <li>Ensure the code is clearly readable in the photo</li>
+                        <li>Upload the photo using the form below</li>
+                        <li>The system will automatically verify the code using OCR</li>
+                    </ol>
+                </div>
+                
+                <div id="messageArea"></div>
+                
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="requestId" class="form-label">Request ID *</label>
+                        <input type="text" id="requestId" name="requestId" class="form-input" 
+                               placeholder="e.g., CHECK_20240115_143022_1234" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Photo Upload *</label>
+                        <div class="file-upload-area" id="uploadArea">
+                            <div class="upload-icon">📷</div>
+                            <p><strong>Click to select a photo</strong> or drag and drop</p>
+                            <p>Supported formats: PNG, JPG, JPEG, GIF, BMP</p>
+                            <input type="file" id="photoFile" name="photo" class="file-input" 
+                                   accept="image/*" required>
+                        </div>
+                        <div id="filePreview"></div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Upload & Verify</button>
+                        <a href="{{ url_for('cage_check.cage_check_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+                
+                <div id="resultArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('photoFile');
+        const filePreview = document.getElementById('filePreview');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+        
+        function handleFileSelect(file) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    filePreview.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview" class="preview-image">
+                        <p><strong>Selected:</strong> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                filePreview.innerHTML = '<p style="color: red;">Please select an image file.</p>';
+            }
+        }
+        
+        // Form submission
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('request_id', document.getElementById('requestId').value);
+            formData.append('photo', document.getElementById('photoFile').files[0]);
+            
+            // Show loading
+            document.getElementById('resultArea').innerHTML = '<div class="loading">Uploading and verifying photo...</div>';
+            
+            fetch('/cage-check/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displaySuccess(data);
+                } else {
+                    displayError(data.error, data.data);
+                }
+            })
+            .catch(error => {
+                displayError('Error uploading photo: ' + error);
+            });
+        });
+        
+        function displaySuccess(data) {
+            const result = data.data;
+            const verificationResult = result.verification_result;
+            const ocrResult = result.ocr_result;
+            
+            let resultHtml = `
+                <div class="success-message">
+                    <h3>✅ Photo Uploaded Successfully!</h3>
+                    <p><strong>Status:</strong> ${result.status}</p>
+                </div>
+                
+                <div class="verification-result">
+                    <div class="result-header">
+                        <div class="result-icon ${verificationResult.found ? 'result-success' : 'result-failed'}">
+                            ${verificationResult.found ? '✅' : '❌'}
+                        </div>
+                        <div>
+                            <h4>${verificationResult.found ? 'Verification Successful' : 'Verification Failed'}</h4>
+                            <p>${verificationResult.found ? 'The verification code was found in the photo!' : 'The verification code was not found in the photo.'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="code-comparison">
+                        <div class="code-box expected">
+                            <strong>Expected Code</strong>
+                            <div class="code-text">${verificationResult.expected_code}</div>
+                        </div>
+                        <div class="code-box found">
+                            <strong>Found Codes</strong>
+                            <div class="code-text">${verificationResult.found_codes.length > 0 ? verificationResult.found_codes.join(', ') : 'None'}</div>
+                        </div>
+                    </div>
+                    
+                    ${ocrResult.success ? `
+                        <div class="ocr-details">
+                            <strong>OCR Results:</strong><br>
+                            <strong>Text Found:</strong> ${ocrResult.text || 'No text detected'}<br>
+                            <strong>Confidence:</strong> ${ocrResult.confidence ? ocrResult.confidence.toFixed(1) + '%' : 'Unknown'}<br>
+                            <strong>Words Detected:</strong> ${ocrResult.words ? ocrResult.words.join(', ') : 'None'}
+                        </div>
+                    ` : `
+                        <div class="ocr-details">
+                            <strong>OCR Error:</strong> ${ocrResult.error}
+                        </div>
+                    `}
+                </div>
+            `;
+            
+            if (result.status === 'completed') {
+                resultHtml += `
+                    <div class="success-message">
+                        <h4>🎉 Verification Complete!</h4>
+                        <p>Your keyholder has been notified of the successful verification.</p>
+                    </div>
+                `;
+            } else if (result.status === 'failed') {
+                resultHtml += `
+                    <div class="error-message">
+                        <h4>⚠️ Verification Failed</h4>
+                        <p>Please ensure the verification code is clearly visible in the photo and try again.</p>
+                        <ul>
+                            <li>Make sure the code is written clearly and legibly</li>
+                            <li>Ensure good lighting in the photo</li>
+                            <li>Keep the camera steady and focused</li>
+                            <li>Make sure the code is not cut off or blurry</li>
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('resultArea').innerHTML = resultHtml;
+        }
+        
+        function displayError(message, data = null) {
+            let errorHtml = `
+                <div class="error-message">
+                    <h3>❌ Error</h3>
+                    <p>${message}</p>
+            `;
+            
+            if (data && data.ocr_result) {
+                errorHtml += `
+                    <div class="ocr-details">
+                        <strong>OCR Results:</strong><br>
+                        <strong>Text Found:</strong> ${data.ocr_result.text || 'No text detected'}<br>
+                        <strong>Confidence:</strong> ${data.ocr_result.confidence ? data.ocr_result.confidence.toFixed(1) + '%' : 'Unknown'}
+                    </div>
+                `;
+            }
+            
+            errorHtml += '</div>';
+            
+            document.getElementById('resultArea').innerHTML = errorHtml;
+        }
+    </script>
+</body>
+</html> 

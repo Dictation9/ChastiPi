@@ -1,0 +1,20 @@
+            <div class="dashboard-section">
+                <h3>🔒 Security & System</h3>
+                <div class="dashboard-links">
+                    <a href="{{ url_for('main.time_status') }}" class="dashboard-link">
+                        <span class="link-icon">🕐</span>
+                        <span class="link-text">Time Verification</span>
+                        <span class="link-desc">Check system time accuracy</span>
+                    </a>
+                    <a href="{{ url_for('keyholder.dashboard') }}" class="dashboard-link">
+                        <span class="link-icon">🔑</span>
+                        <span class="link-text">Keyholder Dashboard</span>
+                        <span class="link-desc">Manage key requests</span>
+                    </a>
+                    <a href="{{ url_for('cage_check.cage_check_dashboard') }}" class="dashboard-link">
+                        <span class="link-icon">🔒</span>
+                        <span class="link-text">Cage Check System</span>
+                        <span class="link-desc">Verify cage/lock with photos</span>
+                    </a>
+                </div>
+            </div> 

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cage Check Dashboard - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .cage-check-dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+            transform: translateY(-2px);
+        }
+        
+        .checks-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .check-item {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .check-item:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .check-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .check-type {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .check-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-expired {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .check-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .check-detail {
+            font-size: 14px;
+        }
+        
+        .check-detail strong {
+            color: #495057;
+        }
+        
+        .verification-code {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+        
+        .check-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Cage Check Dashboard</h1>
+            <nav>
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">← Back to Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="cage-check-dashboard">
+            <div class="dashboard-header">
+                <h2>Verification Requests</h2>
+                <div class="action-buttons">
+                    <a href="{{ url_for('cage_check.request_page') }}" class="btn btn-primary">➕ New Check Request</a>
+                    <a href="{{ url_for('cage_check.upload_page') }}" class="btn btn-success">📸 Upload Photo</a>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="loading">Loading statistics...</div>
+            </div>
+
+            <!-- Check Requests -->
+            <div class="checks-section">
+                <h3>Recent Check Requests</h3>
+                <div id="checksList">
+                    <div class="loading">Loading check requests...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            loadCheckRequests();
+        });
+
+        function loadStatistics() {
+            // For demo purposes, using a placeholder email
+            const keyholderEmail = 'keyholder@example.com';
+            
+            fetch(`/cage-check/api/statistics?keyholder_email=${encodeURIComponent(keyholderEmail)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayStatistics(data.data);
+                    } else {
+                        displayError('Failed to load statistics: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    displayError('Error loading statistics: ' + error);
+                });
+        }
+
+        function displayStatistics(stats) {
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-number">${stats.total_checks || 0}</div>
+                    <div class="stat-label">Total Checks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.pending || 0}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.completed || 0}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${stats.success_rate ? stats.success_rate.toFixed(1) : 0}%</div>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+            `;
+            
+            document.getElementById('statsGrid').innerHTML = statsHtml;
+        }
+
+        function loadCheckRequests() {
+            // For demo purposes, using a placeholder email
+            const keyholderEmail = 'keyholder@example.com';
+            
+            fetch(`/cage-check/api/checks?keyholder_email=${encodeURIComponent(keyholderEmail)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayCheckRequests(data.data);
+                    } else {
+                        displayError('Failed to load check requests: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    displayError('Error loading check requests: ' + error);
+                });
+        }
+
+        function displayCheckRequests(checks) {
+            if (checks.length === 0) {
+                document.getElementById('checksList').innerHTML = `
+                    <div class="empty-state">
+                        <h3>No check requests yet</h3>
+                        <p>Create your first cage check request to get started.</p>
+                        <a href="{{ url_for('cage_check.request_page') }}" class="btn btn-primary">Create Request</a>
+                    </div>
+                `;
+                return;
+            }
+
+            const checksHtml = checks.map(check => {
+                const statusClass = `status-${check.status}`;
+                const createdDate = new Date(check.created_at).toLocaleString();
+                const expiresDate = new Date(check.expires_at).toLocaleString();
+                
+                let actionsHtml = '';
+                if (check.status === 'pending') {
+                    actionsHtml = `
+                        <button class="btn btn-sm btn-warning" onclick="cancelCheck('${check.request_id}')">Cancel</button>
+                    `;
+                }
+                
+                let verificationCodeHtml = '';
+                if (check.status === 'pending') {
+                    verificationCodeHtml = `
+                        <div class="verification-code">
+                            Verification Code: ${check.verification_code}
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="check-item">
+                        <div class="check-header">
+                            <div class="check-type">${check.check_type.toUpperCase()} Check</div>
+                            <div class="check-status ${statusClass}">${check.status.toUpperCase()}</div>
+                        </div>
+                        
+                        <div class="check-details">
+                            <div class="check-detail">
+                                <strong>Device:</strong> ${check.device_name}
+                            </div>
+                            <div class="check-detail">
+                                <strong>Request ID:</strong> ${check.request_id}
+                            </div>
+                            <div class="check-detail">
+                                <strong>Created:</strong> ${createdDate}
+                            </div>
+                            <div class="check-detail">
+                                <strong>Expires:</strong> ${expiresDate}
+                            </div>
+                        </div>
+                        
+                        <div class="check-detail">
+                            <strong>Reason:</strong> ${check.reason}
+                        </div>
+                        
+                        ${verificationCodeHtml}
+                        
+                        <div class="check-actions">
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('checksList').innerHTML = checksHtml;
+        }
+
+        function cancelCheck(requestId) {
+            if (!confirm('Are you sure you want to cancel this check request?')) {
+                return;
+            }
+            
+            // For demo purposes, using a placeholder email
+            const keyholderEmail = 'keyholder@example.com';
+            
+            fetch(`/cage-check/api/cancel/${requestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    keyholder_email: keyholderEmail
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Check request cancelled successfully');
+                    loadCheckRequests(); // Refresh the list
+                } else {
+                    alert('Error cancelling request: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error cancelling request: ' + error);
+            });
+        }
+
+        function displayError(message) {
+            document.getElementById('checksList').innerHTML = `
+                <div class="error">${message}</div>
+            `;
+        }
+    </script>
+</body>
+</html> 

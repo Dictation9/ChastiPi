@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self-Management Dashboard - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .dashboard-container { max-width: 800px; margin: auto; padding: 20px; }
+        .lock-status { background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); text-align: center; }
+        .locked { border-top: 5px solid #dc3545; }
+        .unlocked { border-top: 5px solid #28a745; }
+        .timer { font-size: 3rem; font-weight: bold; color: #333; margin: 20px 0; }
+        .key-code { background: #f8f9fa; padding: 15px; border-radius: 10px; font-family: monospace; font-size: 1.5rem; color: #28a745; margin-top: 20px; }
+        .btn-emergency { background-color: #ffc107; color: #212529; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Self-Management Dashboard</h1>
+            <p>You are in self-managed mode. The program is your keyholder.</p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="lock-status {% if lock_status and not lock_status.is_unlocked %}locked{% else %}unlocked{% endif %}">
+            {% if lock_status and not lock_status.is_unlocked %}
+                <h2>🔒 Your Key is Locked</h2>
+                <p>Time remaining until release:</p>
+                <div class="timer">{{ lock_status.time_remaining }}</div>
+                <p><strong>Started:</strong> {{ lock_status.created_at }}</p>
+                <p><strong>Unlocks at:</strong> {{ lock_status.expires_at }}</p>
+                <form action="{{ url_for('self_manage.emergency_release') }}" method="POST" onsubmit="return confirm('Are you sure you want to start the emergency release timer?');">
+                    <button type="submit" class="btn btn-emergency">Start Emergency Release</button>
+                </form>
+            {% elif lock_status and lock_status.is_unlocked %}
+                <h2>🔑 Your Key is Unlocked!</h2>
+                <p>Your lock timer has expired. Here is your key code:</p>
+                <div class="key-code">{{ lock_status.key_code }}</div>
+                <p>You can now start a new lock whenever you are ready.</p>
+                <a href="{{ url_for('self_manage.start_lock') }}" class="btn btn-primary">Start New Lock</a>
+            {% else %}
+                <h2>🔓 You are Unlocked</h2>
+                <p>You do not have an active lock timer.</p>
+                <a href="{{ url_for('self_manage.start_lock') }}" class="btn btn-primary">Start New Lock</a>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{{ url_for('main.dashboard') }}" class="btn">Return to Main Dashboard</a>
+        </div>
+    </div>
+</body>
+</html> 

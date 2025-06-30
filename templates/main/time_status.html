@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Verification - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .time-status {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-valid {
+            background: #28a745;
+        }
+        
+        .status-invalid {
+            background: #dc3545;
+        }
+        
+        .status-warning {
+            background: #ffc107;
+        }
+        
+        .time-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .time-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .time-label {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .time-value {
+            font-family: monospace;
+            font-size: 1.1em;
+            color: #212529;
+        }
+        
+        .drift-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .drift-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .drift-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .recommendations {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .recommendation-item {
+            margin: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .recommendation-item:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #0c5460;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🕐 Time Verification Status</h1>
+            <nav>
+                <a href="{{ url_for('main.dashboard') }}" class="nav-link">← Back to Dashboard</a>
+            </nav>
+        </header>
+
+        <div class="time-status">
+            <div class="status-card">
+                <h2>System Time Verification</h2>
+                <div id="timeStatus">
+                    <div class="loading">Loading time status...</div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h2>Time Management</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="refreshStatus()">🔄 Refresh Status</button>
+                    <button class="btn btn-warning" onclick="syncTime()">⏰ Sync Time</button>
+                    <button class="btn btn-danger" onclick="forceSyncTime()">⚠️ Force Sync</button>
+                </div>
+                <div id="syncResult"></div>
+            </div>
+
+            <div class="status-card">
+                <h2>Timestamp Validation</h2>
+                <div>
+                    <label for="timestampInput">Enter timestamp to validate:</label>
+                    <input type="datetime-local" id="timestampInput" style="margin: 10px; padding: 5px;">
+                    <button class="btn btn-primary" onclick="validateTimestamp()">Validate</button>
+                </div>
+                <div id="validationResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load time status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTimeStatus();
+        });
+
+        function loadTimeStatus() {
+            fetch('/api/time/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayTimeStatus(data.data);
+                    } else {
+                        displayError('Failed to load time status: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    displayError('Error loading time status: ' + error);
+                });
+        }
+
+        function displayTimeStatus(status) {
+            const verification = status.verification;
+            const isValid = verification.valid;
+            
+            let statusHtml = `
+                <div class="time-info">
+                    <div class="time-item">
+                        <div class="time-label">System Time</div>
+                        <div class="time-value">${formatTime(verification.system_time)}</div>
+                    </div>
+                    <div class="time-item">
+                        <div class="time-label">NTP Time</div>
+                        <div class="time-value">${formatTime(verification.ntp_time)}</div>
+                    </div>
+                </div>
+                
+                <div class="drift-info ${isValid ? '' : verification.drift_seconds > 300 ? 'drift-error' : 'drift-warning'}">
+                    <strong>Time Drift:</strong> ${verification.drift_seconds} seconds
+                    <br><small>Maximum allowed: ${verification.max_drift_allowed} seconds</small>
+                </div>
+                
+                <div class="status-indicator ${isValid ? 'status-valid' : 'status-invalid'}"></div>
+                <strong>Status:</strong> ${isValid ? 'Valid' : 'Invalid'}
+                <br><small>${verification.recommendation}</small>
+            `;
+
+            if (status.recommendations && status.recommendations.length > 0) {
+                statusHtml += `
+                    <div class="recommendations">
+                        <h4>Recommendations:</h4>
+                        ${status.recommendations.map(rec => `<div class="recommendation-item">${rec}</div>`).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('timeStatus').innerHTML = statusHtml;
+        }
+
+        function formatTime(timeStr) {
+            if (!timeStr) return 'Unknown';
+            const date = new Date(timeStr);
+            return date.toLocaleString();
+        }
+
+        function refreshStatus() {
+            document.getElementById('timeStatus').innerHTML = '<div class="loading">Refreshing...</div>';
+            loadTimeStatus();
+        }
+
+        function syncTime() {
+            document.getElementById('syncResult').innerHTML = '<div class="loading">Syncing time...</div>';
+            
+            fetch('/api/time/sync', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ force: false })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('syncResult').innerHTML = `
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px;">
+                            ✅ ${data.message}
+                        </div>
+                    `;
+                    loadTimeStatus(); // Refresh status
+                } else {
+                    document.getElementById('syncResult').innerHTML = `
+                        <div class="error">
+                            ❌ ${data.error}
+                            ${data.recommendation ? '<br><small>' + data.recommendation + '</small>' : ''}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('syncResult').innerHTML = `
+                    <div class="error">Error syncing time: ${error}</div>
+                `;
+            });
+        }
+
+        function forceSyncTime() {
+            if (!confirm('Force sync will attempt to set system time even if it appears accurate. Continue?')) {
+                return;
+            }
+            
+            document.getElementById('syncResult').innerHTML = '<div class="loading">Force syncing time...</div>';
+            
+            fetch('/api/time/sync', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ force: true })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('syncResult').innerHTML = `
+                        <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px;">
+                            ✅ ${data.message}
+                        </div>
+                    `;
+                    loadTimeStatus(); // Refresh status
+                } else {
+                    document.getElementById('syncResult').innerHTML = `
+                        <div class="error">
+                            ❌ ${data.error}
+                            ${data.recommendation ? '<br><small>' + data.recommendation + '</small>' : ''}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('syncResult').innerHTML = `
+                    <div class="error">Error force syncing time: ${error}</div>
+                `;
+            });
+        }
+
+        function validateTimestamp() {
+            const timestampInput = document.getElementById('timestampInput');
+            const timestamp = timestampInput.value;
+            
+            if (!timestamp) {
+                alert('Please enter a timestamp');
+                return;
+            }
+            
+            document.getElementById('validationResult').innerHTML = '<div class="loading">Validating timestamp...</div>';
+            
+            fetch('/api/time/validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    timestamp: new Date(timestamp).toISOString(),
+                    max_age_hours: 24
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const result = data.data;
+                    if (result.valid) {
+                        document.getElementById('validationResult').innerHTML = `
+                            <div style="background: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 15px; border-radius: 5px;">
+                                ✅ Timestamp is valid
+                                <br><small>Age: ${result.age_hours} hours</small>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('validationResult').innerHTML = `
+                            <div class="error">
+                                ❌ ${result.error}
+                                <br><small>${result.recommendation}</small>
+                            </div>
+                        `;
+                    }
+                } else {
+                    document.getElementById('validationResult').innerHTML = `
+                        <div class="error">Error validating timestamp: ${data.error}</div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('validationResult').innerHTML = `
+                    <div class="error">Error validating timestamp: ${error}</div>
+                `;
+            });
+        }
+
+        function displayError(message) {
+            document.getElementById('timeStatus').innerHTML = `
+                <div class="error">${message}</div>
+            `;
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChastiPi - Register Device</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .register-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .key-inputs {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .key-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .key-input input {
+            flex: 1;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .info-box {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .key-count {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <header class="form-section">
+            <h1>🔐 Register New Chastity Device</h1>
+            <p>Register your chastity device and securely store your key codes</p>
+        </header>
+
+        <div class="info-box">
+            <h3>ℹ️ How it works:</h3>
+            <ul>
+                <li>Your key codes are encrypted and stored securely</li>
+                <li>Only you and your keyholder can access the codes</li>
+                <li>Key release requires approval from your keyholder</li>
+                <li>All access is logged and tracked</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Important Security Notes:</h3>
+            <ul>
+                <li>Keep your key codes safe - they cannot be recovered if lost</li>
+                <li>Choose a strong, unique device ID</li>
+                <li>Use a real email address for your keyholder</li>
+                <li>Test the email configuration after registration</li>
+            </ul>
+        </div>
+
+        <form id="registerForm" class="form-section">
+            <h2>Device Information</h2>
+            
+            <div class="form-group">
+                <label for="device_id">Device ID *</label>
+                <input type="text" id="device_id" name="device_id" required 
+                       placeholder="e.g., CB6000S-001, HTv4-2024, etc.">
+                <div class="key-count">Choose a unique identifier for your device</div>
+            </div>
+
+            <div class="form-group">
+                <label for="device_name">Device Name</label>
+                <input type="text" id="device_name" name="device_name" 
+                       placeholder="e.g., My CB6000S, HTv4 Device">
+                <div class="key-count">Optional friendly name for your device</div>
+            </div>
+
+            <div class="form-group">
+                <label for="keyholder_email">Keyholder Email *</label>
+                <input type="email" id="keyholder_email" name="keyholder_email" required 
+                       placeholder="keyholder@example.com">
+                <div class="key-count">Email address of your keyholder for approval requests</div>
+            </div>
+
+            <h2>Key Codes</h2>
+            <div class="key-inputs">
+                <p><strong>Enter your key codes:</strong></p>
+                <div id="keyInputs">
+                    <div class="key-input">
+                        <input type="text" name="key_codes[main]" placeholder="Main key code" required>
+                        <span>Main Key</span>
+                    </div>
+                </div>
+                <button type="button" onclick="addKeyInput()" class="btn btn-secondary">➕ Add Another Key</button>
+                <button type="button" onclick="removeKeyInput()" class="btn btn-danger">➖ Remove Last Key</button>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <button type="submit" class="btn btn-primary">🔐 Register Device</button>
+                <a href="{{ url_for('keyholder.dashboard') }}" class="btn btn-secondary">❌ Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let keyCount = 1;
+
+        function addKeyInput() {
+            keyCount++;
+            const keyInputs = document.getElementById('keyInputs');
+            const newKey = document.createElement('div');
+            newKey.className = 'key-input';
+            newKey.innerHTML = `
+                <input type="text" name="key_codes[key${keyCount}]" placeholder="Key ${keyCount} code">
+                <span>Key ${keyCount}</span>
+            `;
+            keyInputs.appendChild(newKey);
+        }
+
+        function removeKeyInput() {
+            if (keyCount > 1) {
+                const keyInputs = document.getElementById('keyInputs');
+                keyInputs.removeChild(keyInputs.lastElementChild);
+                keyCount--;
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = new FormData(this);
+            const data = {};
+            
+            // Convert FormData to object
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('key_codes[')) {
+                    if (!data.key_codes) data.key_codes = {};
+                    const keyName = key.match(/\[(.*?)\]/)[1];
+                    data.key_codes[keyName] = value;
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            // Validate required fields
+            if (!data.device_id || !data.keyholder_email || !data.key_codes) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Validate key codes
+            const keyCodes = Object.values(data.key_codes);
+            if (keyCodes.length === 0 || keyCodes.some(code => !code.trim())) {
+                alert('Please enter at least one key code');
+                return;
+            }
+
+            // Submit registration
+            fetch('/keyholder/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Device registered successfully!');
+                    window.location.href = '/keyholder/';
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+        });
+    </script>
+</body>
+</html> 

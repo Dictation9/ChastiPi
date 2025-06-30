@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Configuration - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .export-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .export-header {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .export-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .export-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .export-info h4 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        .export-info ul {
+            margin-bottom: 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #17a2b8;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #138496;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #17a2b8;
+        }
+        .export-options {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .export-options h4 {
+            margin-top: 0;
+            color: #333;
+        }
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="export-container">
+        <header class="export-header">
+            <h1>📤 Export Configuration</h1>
+            <p>Download your ChastiPi configuration settings</p>
+        </header>
+
+        <div class="export-card">
+            <div class="export-info">
+                <h4>📋 What's Included in the Export</h4>
+                <ul>
+                    <li><strong>Cage Check Settings:</strong> Verification timing, notification preferences</li>
+                    <li><strong>Notification Preferences:</strong> Email, SMS, and push notification settings</li>
+                    <li><strong>Punishment Configuration:</strong> Generation rules and verification requirements</li>
+                    <li><strong>Keyholder Settings:</strong> Approval rules and emergency procedures</li>
+                    <li><strong>Security Settings:</strong> Access control and authentication preferences</li>
+                    <li><strong>Appearance Settings:</strong> Theme, language, and display preferences</li>
+                    <li><strong>Automation Rules:</strong> Scheduled actions and auto-responses</li>
+                    <li><strong>Reporting Configuration:</strong> Report types and delivery settings</li>
+                </ul>
+            </div>
+
+            <form id="exportForm" method="POST">
+                <div class="form-group">
+                    <label for="keyholder_email">Keyholder Email</label>
+                    <input type="email" id="keyholder_email" name="keyholder_email" 
+                           value="{{ keyholder_email }}" required readonly>
+                </div>
+
+                <div class="export-options">
+                    <h4>Export Options</h4>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="include_instructions" checked>
+                            Include import instructions
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="include_metadata" checked>
+                            Include configuration metadata
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="include_templates" checked>
+                            Include available templates
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="encrypt_file" checked>
+                            Encrypt configuration file (recommended)
+                        </label>
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn">📤 Export Configuration</button>
+                    <a href="{{ url_for('keyholder_config.config_dashboard', keyholder_email=keyholder_email) }}" class="btn btn-secondary">← Back to Dashboard</a>
+                </div>
+            </form>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('exportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                const response = await fetch('/keyholder/config/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    // Create download link
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `chastipi_config_${data.keyholder_email.replace('@', '_').replace('.', '_')}_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    document.getElementById('result').innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>✅ Export Successful!</h4>
+                            <p>Your configuration has been exported successfully.</p>
+                            <p><strong>File:</strong> ${a.download}</p>
+                            <p><strong>Next Steps:</strong></p>
+                            <ul>
+                                <li>Save the file in a secure location</li>
+                                <li>Use it to restore settings on another system</li>
+                                <li>Share with trusted administrators</li>
+                                <li>Backup regularly for disaster recovery</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    const error = await response.json();
+                    document.getElementById('result').innerHTML = `
+                        <div class="alert alert-error">
+                            <h4>❌ Export Failed</h4>
+                            <p>${error.error || 'Unknown error occurred'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `
+                    <div class="alert alert-error">
+                        <h4>❌ Export Failed</h4>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 

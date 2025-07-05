@@ -40,53 +40,75 @@ def save_wearer_settings(settings):
 @keyholder_bp.route('/dashboard')
 def dashboard():
     """Keyholder dashboard"""
-    # Get active requests
-    active_requests = key_storage.get_active_requests()
+    try:
+        # Get active requests
+        active_requests = key_storage.get_active_requests()
+        
+        # Get recent activity
+        recent_activity = key_storage.get_recent_activity(limit=10)
+        
+        # Get statistics
+        stats = key_storage.get_statistics()
+        
+        # Get configuration info
+        config_info = config_service.get_config_info("keyholder")
+        
+        # Get keyholder email
+        keyholder_email = config.get("keyholder.default_keyholder_email", "")
+        
+        # Get pending requests
+        pending_requests = key_storage.get_pending_requests()
+        
+        # Get devices
+        devices = key_storage.get_all_devices()
+        
+        # Get client IP and network status
+        client_ip = request.remote_addr
+        is_remote = False  # This could be enhanced to detect actual remote access
+        
+        # Plugin management
+        plugins = []
+        for plugin_file in PLUGINS_PATH.glob("*.py"):
+            if plugin_file.name.startswith("__"): continue
+            plugins.append(plugin_file.stem)
+        enabled_plugins = set(config.get('plugins.enabled_plugins', []))
+        plugin_states = {p: (p in enabled_plugins) for p in plugins}
+        
+        wearer_settings = load_wearer_settings()
+        
+        return render_template('keyholder/dashboard.html',
+                             active_requests=active_requests,
+                             recent_activity=recent_activity,
+                             stats=stats,
+                             config_info=config_info,
+                             keyholder_email=keyholder_email,
+                             pending_requests=pending_requests,
+                             devices=devices,
+                             client_ip=client_ip,
+                             is_remote=is_remote,
+                             plugin_states=plugin_states,
+                             wearer_settings=wearer_settings)
     
-    # Get recent activity
-    recent_activity = key_storage.get_recent_activity(limit=10)
-    
-    # Get statistics
-    stats = key_storage.get_statistics()
-    
-    # Get configuration info
-    config_info = config_service.get_config_info("keyholder")
-    
-    # Get keyholder email
-    keyholder_email = config.get("keyholder.default_keyholder_email", "")
-    
-    # Get pending requests
-    pending_requests = key_storage.get_pending_requests()
-    
-    # Get devices
-    devices = key_storage.get_all_devices()
-    
-    # Get client IP and network status
-    client_ip = request.remote_addr
-    is_remote = False  # This could be enhanced to detect actual remote access
-    
-    # Plugin management
-    plugins = []
-    for plugin_file in PLUGINS_PATH.glob("*.py"):
-        if plugin_file.name.startswith("__"): continue
-        plugins.append(plugin_file.stem)
-    enabled_plugins = set(config.get('plugins.enabled_plugins', []))
-    plugin_states = {p: (p in enabled_plugins) for p in plugins}
-    
-    wearer_settings = load_wearer_settings()
-    
-    return render_template('keyholder/dashboard.html',
-                         active_requests=active_requests,
-                         recent_activity=recent_activity,
-                         stats=stats,
-                         config_info=config_info,
-                         keyholder_email=keyholder_email,
-                         pending_requests=pending_requests,
-                         devices=devices,
-                         client_ip=client_ip,
-                         is_remote=is_remote,
-                         plugin_states=plugin_states,
-                         wearer_settings=wearer_settings)
+    except Exception as e:
+        # Log the error
+        from chasti_pi.services.logging_service import enhanced_logger
+        enhanced_logger.log_error(e, {
+            'route': 'keyholder.dashboard',
+            'request_method': request.method,
+            'request_path': request.path
+        })
+        
+        # Return a simple error page
+        return f"""
+        <html>
+        <head><title>Dashboard Error</title></head>
+        <body>
+        <h1>Dashboard Error</h1>
+        <p>An error occurred while loading the dashboard: {str(e)}</p>
+        <p><a href="{{ url_for('main.index') }}">Return to Main Page</a></p>
+        </body>
+        </html>
+        """, 500
 
 @keyholder_bp.route('/digital-keyholder')
 def digital_keyholder():

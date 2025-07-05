@@ -466,4 +466,8 @@ class KeyStorageService:
             "email": keyholder_email,
             "total_devices": len(self.devices),
             "active_requests": len(self.get_active_requests())
-        } 
+        }
+    
+    def get_all_devices(self):
+        """Get all registered devices"""
+        return self.devices 

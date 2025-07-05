@@ -333,14 +333,20 @@ def manual_update():
         git_pull = subprocess.run(['git', 'pull'], capture_output=True, text=True, timeout=60)
         git_output = git_pull.stdout + '\n' + git_pull.stderr
         
-        # Update dependencies
-        pip_install = subprocess.run(['pip3', 'install', '-r', 'requirements.txt'], capture_output=True, text=True, timeout=120)
+        # Get virtual environment path
+        import sys
+        venv_python = sys.executable
+        venv_pip = venv_python.replace('python', 'pip')
+        
+        # Update dependencies using virtual environment pip
+        pip_install = subprocess.run([venv_pip, 'install', '-r', 'requirements.txt'], capture_output=True, text=True, timeout=120)
         pip_output = pip_install.stdout + '\n' + pip_install.stderr
 
         return jsonify({
             'success': True,
             'git_output': git_output,
-            'pip_output': pip_output
+            'pip_output': pip_output,
+            'venv_path': venv_python
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}) 

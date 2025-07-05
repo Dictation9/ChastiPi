@@ -3,15 +3,32 @@
 
 echo "🔧 Installing missing dependencies for ChastiPi dashboard..."
 
+# Check if virtual environment exists
+if [ -d "venv" ]; then
+    echo "🐍 Activating virtual environment..."
+    source venv/bin/activate
+    PYTHON_CMD="python"
+    PIP_CMD="pip"
+elif [ -d ".venv" ]; then
+    echo "🐍 Activating virtual environment..."
+    source .venv/bin/activate
+    PYTHON_CMD="python"
+    PIP_CMD="pip"
+else
+    echo "⚠️  No virtual environment found, using system Python..."
+    PYTHON_CMD="python3"
+    PIP_CMD="pip3"
+fi
+
 # Install required packages
 echo "📦 Installing cryptography..."
-pip3 install cryptography
+$PIP_CMD install cryptography
 
 echo "📦 Installing flask..."
-pip3 install flask
+$PIP_CMD install flask
 
 echo "📦 Installing other required packages..."
-pip3 install -r requirements.txt
+$PIP_CMD install -r requirements.txt
 
 echo "✅ Dependencies installed!"
 echo "🔄 Please restart ChastiPi: ./start_chastipi.sh" 

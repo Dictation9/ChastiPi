@@ -15,6 +15,23 @@ if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     exit 1
 fi
 
+# Check if virtual environment exists
+if [ -d "venv" ]; then
+    echo "🐍 Activating virtual environment..."
+    source venv/bin/activate
+    PYTHON_CMD="python"
+    PIP_CMD="pip"
+elif [ -d ".venv" ]; then
+    echo "🐍 Activating virtual environment..."
+    source .venv/bin/activate
+    PYTHON_CMD="python"
+    PIP_CMD="pip"
+else
+    echo "⚠️  No virtual environment found, using system Python..."
+    PYTHON_CMD="python3"
+    PIP_CMD="pip3"
+fi
+
 # Pull latest code
 echo "\n🔄 Pulling latest code from GitHub..."
 git pull
@@ -25,7 +42,7 @@ if [ $GIT_STATUS -ne 0 ]; then
 fi
 
 echo "\n📦 Installing/updating Python dependencies..."
-pip3 install -r requirements.txt
+$PIP_CMD install -r requirements.txt
 PIP_STATUS=$?
 if [ $PIP_STATUS -ne 0 ]; then
     echo "❌ pip install failed."

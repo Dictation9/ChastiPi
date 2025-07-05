@@ -1,7 +1,21 @@
 #!/bin/bash
 
-# ChastiPi Install Script
-# This script sets up a Python virtual environment and installs dependencies.
+# ChastiPi Install Script (Legacy)
+# This script is kept for backward compatibility.
+# For Raspberry Pi users, use install_raspberry_pi.sh instead.
+
+echo "⚠️  This is the legacy install script."
+echo ""
+echo "📖 For better installation experience:"
+echo "   - Raspberry Pi users: Use ./install_raspberry_pi.sh"
+echo "   - macOS users: Use ./mac_version/install_mac.sh"
+echo ""
+echo "🤔 Continue with legacy installation? (y/N)"
+read -r response
+if [[ ! "$response" =~ ^[Yy]$ ]]; then
+    echo "Installation cancelled. Please use the recommended installer."
+    exit 1
+fi
 
 set -e
 
@@ -23,9 +37,13 @@ source venv/bin/activate
 # Step 4: Upgrade pip
 pip install --upgrade pip
 
-# Step 5: Install dependencies
+# Step 5: Install dependencies with NumPy compatibility fix
+echo "Installing dependencies with NumPy compatibility..."
+pip install "numpy<2.0"
+pip install opencv-python-headless
+
 if [ -f "requirements.txt" ]; then
-    echo "Installing dependencies from requirements.txt..."
+    echo "Installing other dependencies from requirements.txt..."
     pip install -r requirements.txt
 else
     echo "requirements.txt not found!"
@@ -42,5 +60,9 @@ To activate your virtual environment:
 
 To run the app:
   python run.py
+
+📖 For better installation experience next time:
+   - Raspberry Pi: Use ./install_raspberry_pi.sh
+   - macOS: Use ./mac_version/install_mac.sh
 
 EOF 

@@ -54,7 +54,11 @@
         "require_photo": true,
         "ocr_accuracy_threshold": 0.8,
         "auto_escalation": true,
-        "escalation_delay_hours": 48
+        "escalation_delay_hours": 48,
+        "video_enabled": true,
+        "max_video_duration": 300,
+        "min_video_duration": 3,
+        "video_frame_interval": 1
     },
     "punishment": {
         "enabled": true,
@@ -82,7 +86,7 @@
     },
     "upload": {
         "max_file_size_mb": 10,
-        "allowed_formats": ["jpg", "jpeg", "png", "gif", "bmp"],
+        "allowed_formats": ["jpg", "jpeg", "png", "gif", "bmp", "mp4", "mov", "avi", "wmv", "flv", "webm"],
         "storage_path": "uploads",
         "auto_cleanup": true,
         "cleanup_interval_days": 7,

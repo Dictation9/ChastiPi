@@ -1,0 +1,30 @@
+# ChastiPi Raspberry Pi Requirements
+# Optimized for Raspberry Pi with compatible package versions
+
+# Core dependencies with Pi-optimized versions
+numpy<2.0
+opencv-python-headless
+pillow
+pytesseract
+
+# Web framework
+flask
+werkzeug
+
+# HTTP and networking
+requests
+urllib3
+
+# Date and time handling
+python-dateutil
+pytz
+
+# System monitoring
+psutil
+
+# Task scheduling
+schedule
+
+# Additional utilities
+python-dotenv
+click 

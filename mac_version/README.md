@@ -2,6 +2,8 @@
 
 This folder contains all the Mac-specific code and tools for creating a native macOS application bundle for ChastiPi.
 
+📖 **See the [main README](../README.md) for general project information and features.**
+
 ## 📁 Folder Structure
 
 ```
@@ -171,9 +173,10 @@ brew install python@3.11
 
 ## 📚 Documentation
 
+- **[Main ChastiPi README](../README.md)** - General project information and features
+- **[Raspberry Pi Installation Guide](../README_RASPBERRY_PI.md)** - Pi setup instructions
 - **`README_MAC.md`** - Complete Mac installation guide
 - **`MAC_APP_GUIDE.md`** - Detailed app bundle guide
-- **Main ChastiPi README** - General project documentation
 
 ## 🔄 Updates
 

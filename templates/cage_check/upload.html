@@ -225,6 +225,24 @@
             border-radius: 8px;
             margin: 15px 0;
         }
+        
+        .file-requirements {
+            margin-top: 20px;
+        }
+        
+        .file-requirements h5 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .file-requirements ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .file-requirements li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -241,15 +259,41 @@
                 <h2>Photo Verification</h2>
                 
                 <div class="instructions">
-                    <h4>📋 How to Upload Your Verification Photo</h4>
+                    <h4>📋 How to Upload Your Verification Photo/Video</h4>
                     <ol>
                         <li>Write the verification code provided by your keyholder on a piece of paper</li>
                         <li>Place the paper next to your cage/lock</li>
-                        <li>Take a clear photo showing both the device and the code</li>
-                        <li>Ensure the code is clearly readable in the photo</li>
-                        <li>Upload the photo using the form below</li>
+                        <li><strong>For Photos:</strong> Take a clear photo showing both the device and the code</li>
+                        <li><strong>For Videos:</strong> Record a video (3 seconds to 5 minutes) showing both the device and the code clearly</li>
+                        <li>Ensure the code is clearly readable in the photo/video</li>
+                        <li>Upload the file using the form below</li>
                         <li>The system will automatically verify the code using OCR</li>
                     </ol>
+                    
+                    <div class="file-requirements">
+                        <h5>📁 Supported File Types:</h5>
+                        <ul>
+                            <li><strong>Images:</strong> PNG, JPG, JPEG, GIF, BMP</li>
+                            <li><strong>Videos:</strong> MP4, MOV, AVI, WMV, FLV, WEBM</li>
+                        </ul>
+                        
+                        <h5>⏱️ Video Requirements:</h5>
+                        <ul>
+                            <li>Duration: 3 seconds to 5 minutes (300 seconds)</li>
+                            <li>Code must be clearly visible</li>
+                            <li>Good lighting recommended</li>
+                            <li>Steady camera movement</li>
+                        </ul>
+                        <div class="alert alert-info" style="margin-top: 15px;">
+                            <strong>Note:</strong> <br>
+                            <ul>
+                                <li>Video uploads will take longer to process than photos, especially for longer videos.</li>
+                                <li>Processing time increases with video length. Please be patient after uploading.</li>
+                                <li>Estimated processing time: <span id="video-estimate">N/A</span></li>
+                                <li>Live processing time: <span id="live-processing-time">Not started</span></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 
                 <div id="messageArea"></div>
@@ -261,17 +305,17 @@
                                placeholder="e.g., CHECK_20240115_143022_1234" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label class="form-label">Photo Upload *</label>
-                        <div class="file-upload-area" id="uploadArea">
-                            <div class="upload-icon">📷</div>
-                            <p><strong>Click to select a photo</strong> or drag and drop</p>
-                            <p>Supported formats: PNG, JPG, JPEG, GIF, BMP</p>
-                            <input type="file" id="photoFile" name="photo" class="file-input" 
-                                   accept="image/*" required>
+                                            <div class="form-group">
+                            <label class="form-label">Photo/Video Upload *</label>
+                            <div class="file-upload-area" id="uploadArea">
+                                <div class="upload-icon">📷</div>
+                                <p><strong>Click to select a photo or video</strong> or drag and drop</p>
+                                <p>Supported formats: PNG, JPG, JPEG, GIF, BMP, MP4, MOV, AVI, WMV, FLV, WEBM</p>
+                                <input type="file" id="photoFile" name="photo" class="file-input" 
+                                       accept="image/*,video/*" required>
+                            </div>
+                            <div id="filePreview"></div>
                         </div>
-                        <div id="filePreview"></div>
-                    </div>
                     
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Upload & Verify</button>
@@ -327,9 +371,72 @@
                     `;
                 };
                 reader.readAsDataURL(file);
+                document.getElementById('video-estimate').textContent = 'N/A';
+            } else if (file.type.startsWith('video/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    filePreview.innerHTML = `
+                        <video controls style="max-width: 100%; max-height: 200px;">
+                            <source src="${e.target.result}" type="${file.type}">
+                            Your browser does not support video playback.
+                        </video>
+                        <p><strong>Selected:</strong> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>
+                        <p><em>Video will be processed frame by frame for verification.</em></p>
+                    `;
+                    // Estimate processing time
+                    estimateVideoProcessingTime(file);
+                };
+                reader.readAsDataURL(file);
             } else {
-                filePreview.innerHTML = '<p style="color: red;">Please select an image file.</p>';
+                filePreview.innerHTML = '<p style="color: red;">Please select an image or video file.</p>';
+                document.getElementById('video-estimate').textContent = 'N/A';
             }
+        }
+        
+        function estimateVideoProcessingTime(file) {
+            // Try to estimate video duration and processing time
+            const url = URL.createObjectURL(file);
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = function() {
+                window.URL.revokeObjectURL(url);
+                const duration = video.duration;
+                
+                // Get stored processing times from localStorage
+                const processingTimes = JSON.parse(localStorage.getItem('videoProcessingTimes') || '[]');
+                let estimate;
+                
+                if (processingTimes.length > 0) {
+                    // Calculate average processing time per second of video
+                    const avgTimePerSecond = processingTimes.reduce((sum, time) => sum + time.processingTime / time.duration, 0) / processingTimes.length;
+                    estimate = Math.ceil(duration * avgTimePerSecond);
+                } else {
+                    // Default estimate: 1-2 seconds per 10 seconds of video
+                    estimate = Math.ceil(duration / 10 * 2);
+                }
+                
+                if (estimate < 2) estimate = 2;
+                if (estimate > 120) estimate = 120; // Cap at 2 minutes
+                
+                document.getElementById('video-estimate').textContent = `${Math.round(duration)}s video ≈ ${estimate} seconds to process`;
+            };
+            video.onerror = function() {
+                document.getElementById('video-estimate').textContent = 'Unknown';
+            };
+            video.src = url;
+        }
+        
+        // Function to store processing time for future estimates
+        function storeProcessingTime(duration, processingTime) {
+            const processingTimes = JSON.parse(localStorage.getItem('videoProcessingTimes') || '[]');
+            processingTimes.push({ duration, processingTime });
+            
+            // Keep only the last 10 entries to avoid localStorage getting too large
+            if (processingTimes.length > 10) {
+                processingTimes.splice(0, processingTimes.length - 10);
+            }
+            
+            localStorage.setItem('videoProcessingTimes', JSON.stringify(processingTimes));
         }
         
         // Form submission
@@ -340,8 +447,19 @@
             formData.append('request_id', document.getElementById('requestId').value);
             formData.append('photo', document.getElementById('photoFile').files[0]);
             
-            // Show loading
+            // Start timing
+            const startTime = Date.now();
+            const file = document.getElementById('photoFile').files[0];
+            const isVideo = file.type.startsWith('video/');
+            
+            // Show loading with live timer
             document.getElementById('resultArea').innerHTML = '<div class="loading">Uploading and verifying photo...</div>';
+            
+            // Start live timer update
+            const timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('live-processing-time').textContent = `${elapsed} seconds`;
+            }, 1000);
             
             fetch('/cage-check/api/upload', {
                 method: 'POST',
@@ -349,26 +467,46 @@
             })
             .then(response => response.json())
             .then(data => {
+                clearInterval(timerInterval);
+                const totalTime = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('live-processing-time').textContent = `${totalTime} seconds (completed)`;
+                
+                // Store processing time for video files to improve future estimates
+                if (isVideo && data.success) {
+                    const video = document.createElement('video');
+                    video.preload = 'metadata';
+                    video.onloadedmetadata = function() {
+                        storeProcessingTime(video.duration, totalTime);
+                    };
+                    video.src = URL.createObjectURL(file);
+                }
+                
                 if (data.success) {
-                    displaySuccess(data);
+                    displaySuccess(data, totalTime, isVideo);
                 } else {
-                    displayError(data.error, data.data);
+                    displayError(data.error, data.data, totalTime);
                 }
             })
             .catch(error => {
-                displayError('Error uploading photo: ' + error);
+                clearInterval(timerInterval);
+                const totalTime = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('live-processing-time').textContent = `${totalTime} seconds (failed)`;
+                displayError('Error uploading photo: ' + error, null, totalTime);
             });
         });
         
-        function displaySuccess(data) {
+        function displaySuccess(data, totalTime, isVideo) {
             const result = data.data;
             const verificationResult = result.verification_result;
             const ocrResult = result.ocr_result;
             
             let resultHtml = `
                 <div class="success-message">
-                    <h3>✅ Photo Uploaded Successfully!</h3>
+                    <h3>✅ ${result.video_processed ? 'Video' : 'Photo'} Uploaded Successfully!</h3>
                     <p><strong>Status:</strong> ${result.status}</p>
+                    <p><strong>Processing Time:</strong> ${totalTime} seconds</p>
+                    ${isVideo ? `<p><strong>Estimate Accuracy:</strong> <span id="estimate-comparison">Calculating...</span></p>` : ''}
+                    ${result.video_processed ? `<p><strong>Video Processing:</strong> ${result.total_frames} frames processed, best result from frame ${result.best_frame}</p>` : ''}
                 </div>
                 
                 <div class="verification-result">
@@ -431,13 +569,38 @@
             }
             
             document.getElementById('resultArea').innerHTML = resultHtml;
+            
+            // Calculate estimate comparison for videos
+            if (isVideo) {
+                const video = document.createElement('video');
+                video.preload = 'metadata';
+                video.onloadedmetadata = function() {
+                    const duration = video.duration;
+                    const processingTimes = JSON.parse(localStorage.getItem('videoProcessingTimes') || '[]');
+                    let estimate;
+                    
+                    if (processingTimes.length > 1) { // Use previous data for estimate
+                        const avgTimePerSecond = processingTimes.slice(0, -1).reduce((sum, time) => sum + time.processingTime / time.duration, 0) / (processingTimes.length - 1);
+                        estimate = Math.ceil(duration * avgTimePerSecond);
+                    } else {
+                        estimate = Math.ceil(duration / 10 * 2);
+                    }
+                    
+                    const difference = Math.abs(totalTime - estimate);
+                    const accuracy = Math.max(0, 100 - (difference / totalTime * 100));
+                    const comparisonText = `Estimated: ${estimate}s, Actual: ${totalTime}s (${accuracy.toFixed(1)}% accurate)`;
+                    document.getElementById('estimate-comparison').textContent = comparisonText;
+                };
+                video.src = URL.createObjectURL(file);
+            }
         }
         
-        function displayError(message, data = null) {
+        function displayError(message, data = null, totalTime = null) {
             let errorHtml = `
                 <div class="error-message">
                     <h3>❌ Error</h3>
                     <p>${message}</p>
+                    ${totalTime ? `<p><strong>Processing Time:</strong> ${totalTime} seconds</p>` : ''}
             `;
             
             if (data && data.ocr_result) {

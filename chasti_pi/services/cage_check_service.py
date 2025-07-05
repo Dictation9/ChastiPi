@@ -9,7 +9,11 @@ import cv2
 import pytesseract
 from PIL import Image
 import numpy as np
+import os
+import tempfile
+from chasti_pi.core.config import config
 from ..services.email_service import EmailService
+from werkzeug.utils import secure_filename
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +43,11 @@ class CageCheckService:
         self.reminder_delay_hours = 1  # Send reminder after 1 hour
         self.final_warning_hours = 6   # Send final warning after 6 hours
         self.expiry_warning_hours = 2  # Send expiry warning 2 hours before
+        
+        # Video processing settings
+        self.video_frame_interval = config.get("cage_check.video_frame_interval", 1)  # Extract frame every 1 second
+        self.max_video_duration = config.get("cage_check.max_video_duration", 300)   # Maximum video duration in seconds (5 minutes)
+        self.min_video_duration = config.get("cage_check.min_video_duration", 3)     # Minimum video duration in seconds
         
         # Initialize email service
         self.email_service = EmailService()
@@ -601,8 +610,8 @@ A verification request has expired without completion.
                 checks.append(check)
         return sorted(checks, key=lambda x: x['created_at'], reverse=True)
     
-    def verify_uploaded_photo(self, request_id: str, photo_path: str) -> Dict:
-        """Verify uploaded photo contains the correct verification code"""
+    def verify_cage_check(self, request_id: str, uploaded_file) -> Dict:
+        """Verify uploaded photo/video for cage check"""
         try:
             # Get the check request
             check_request = self.get_check_request(request_id)
@@ -628,24 +637,52 @@ A verification request has expired without completion.
                     'error': 'Verification code has expired'
                 }
             
-            # Extract text from image using OCR
-            ocr_result = self._extract_text_from_image(photo_path)
+            # Save uploaded file
+            filename = secure_filename(uploaded_file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            file_extension = Path(filename).suffix.lower()
             
-            # Check if verification code is in the extracted text
-            verification_code = check_request['verification_code']
-            code_found = self._find_verification_code(ocr_result, verification_code)
+            # Create unique filename
+            unique_filename = f"cage_check_{request_id}_{timestamp}{file_extension}"
+            upload_path = Path(UPLOAD_FOLDER)
+            upload_path.mkdir(exist_ok=True)
+            file_path = upload_path / unique_filename
+            
+            # Save file
+            uploaded_file.save(str(file_path))
+            
+            # Process file based on type
+            if self._is_video_file(str(file_path)):
+                # Process video
+                result = self._process_video_for_verification(str(file_path), check_request['verification_code'])
+            else:
+                # Process image
+                ocr_result = self._extract_text_from_image(str(file_path))
+                if ocr_result['success']:
+                    verification_result = self._find_verification_code(ocr_result, check_request['verification_code'])
+                    result = {
+                        'success': True,
+                        'video_processed': False,
+                        'ocr_result': ocr_result,
+                        'verification_result': verification_result
+                    }
+                else:
+                    result = {
+                        'success': False,
+                        'error': ocr_result['error']
+                    }
             
             # Update check request
-            check_request['uploaded_photo'] = photo_path
-            check_request['ocr_result'] = ocr_result
-            check_request['verification_result'] = code_found
+            check_request['uploaded_photo'] = str(file_path)
+            check_request['ocr_result'] = result.get('ocr_result', {})
+            check_request['verification_result'] = result.get('verification_result', {})
             check_request['completed_at'] = datetime.now().isoformat()
             
-            if code_found['found']:
+            if result.get('success') and result.get('verification_result', {}).get('found'):
                 check_request['status'] = 'completed'
                 # Mark code as used
-                if verification_code in self.verification_codes:
-                    self.verification_codes[verification_code]['used'] = True
+                if check_request['verification_code'] in self.verification_codes:
+                    self.verification_codes[check_request['verification_code']]['used'] = True
             else:
                 check_request['status'] = 'failed'
             
@@ -654,13 +691,18 @@ A verification request has expired without completion.
             
             return {
                 'success': True,
-                'verification_result': code_found,
-                'ocr_result': ocr_result,
-                'status': check_request['status']
+                'data': {
+                    'status': check_request['status'],
+                    'verification_result': result.get('verification_result', {}),
+                    'ocr_result': result.get('ocr_result', {}),
+                    'video_processed': result.get('video_processed', False),
+                    'total_frames': result.get('total_frames', 0),
+                    'best_frame': result.get('best_frame', 0)
+                }
             }
             
         except Exception as e:
-            logger.error(f"Error verifying uploaded photo: {str(e)}")
+            logger.error(f"Error verifying cage check: {str(e)}")
             return {
                 'success': False,
                 'error': str(e)
@@ -669,24 +711,22 @@ A verification request has expired without completion.
     def _extract_text_from_image(self, image_path: str) -> Dict:
         """Extract text from image using OCR"""
         try:
-            # Load image
+            # Read image
             image = cv2.imread(image_path)
             if image is None:
                 return {
                     'success': False,
-                    'error': 'Could not load image',
-                    'text': '',
-                    'confidence': 0
+                    'error': 'Could not read image file'
                 }
             
             # Convert to grayscale
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             
-            # Apply preprocessing to improve OCR
-            # Resize image for better OCR
+            # Apply preprocessing
+            # Resize if too large
             height, width = gray.shape
-            if width > 2000:
-                scale = 2000 / width
+            if width > 2000 or height > 2000:
+                scale = min(2000/width, 2000/height)
                 new_width = int(width * scale)
                 new_height = int(height * scale)
                 gray = cv2.resize(gray, (new_width, new_height))
@@ -698,26 +738,163 @@ A verification request has expired without completion.
             text = pytesseract.image_to_string(thresh, config='--psm 6')
             
             # Get confidence scores
-            data = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT, config='--psm 6')
-            
-            # Calculate average confidence
+            data = pytesseract.image_to_data(thresh, output_type=pytesseract.Output.DICT)
             confidences = [int(conf) for conf in data['conf'] if int(conf) > 0]
             avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+            
+            # Extract individual words
+            words = text.split()
             
             return {
                 'success': True,
                 'text': text.strip(),
+                'words': words,
                 'confidence': avg_confidence,
-                'words': text.strip().split()
+                'word_count': len(words)
             }
             
         except Exception as e:
             logger.error(f"Error extracting text from image: {str(e)}")
             return {
                 'success': False,
-                'error': str(e),
-                'text': '',
-                'confidence': 0
+                'error': str(e)
+            }
+    
+    def _is_video_file(self, file_path: str) -> bool:
+        """Check if file is a video based on extension"""
+        video_extensions = {'.mp4', '.mov', '.avi', '.wmv', '.flv', '.webm'}
+        return Path(file_path).suffix.lower() in video_extensions
+    
+    def _extract_frames_from_video(self, video_path: str) -> List[str]:
+        """Extract frames from video at regular intervals"""
+        try:
+            cap = cv2.VideoCapture(video_path)
+            if not cap.isOpened():
+                raise Exception("Could not open video file")
+            
+            # Get video properties
+            fps = cap.get(cv2.CAP_PROP_FPS)
+            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+            duration = total_frames / fps if fps > 0 else 0
+            
+            # Check video duration
+            if duration > self.max_video_duration:
+                raise Exception(f"Video too long ({duration:.1f}s). Maximum allowed: {self.max_video_duration}s")
+            if duration < self.min_video_duration:
+                raise Exception(f"Video too short ({duration:.1f}s). Minimum required: {self.min_video_duration}s")
+            
+            # Calculate frame interval
+            frame_interval = int(fps * self.video_frame_interval)
+            if frame_interval < 1:
+                frame_interval = 1
+            
+            frame_paths = []
+            frame_count = 0
+            extracted_count = 0
+            
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                # Extract frame at intervals
+                if frame_count % frame_interval == 0:
+                    # Save frame to temporary file
+                    frame_filename = f"frame_{extracted_count:03d}.jpg"
+                    frame_path = os.path.join(tempfile.gettempdir(), frame_filename)
+                    
+                    # Save frame
+                    cv2.imwrite(frame_path, frame)
+                    frame_paths.append(frame_path)
+                    extracted_count += 1
+                    
+                    # Limit number of frames to process
+                    if extracted_count >= 10:  # Max 10 frames
+                        break
+                
+                frame_count += 1
+            
+            cap.release()
+            
+            if not frame_paths:
+                raise Exception("No frames could be extracted from video")
+            
+            logger.info(f"Extracted {len(frame_paths)} frames from video")
+            return frame_paths
+            
+        except Exception as e:
+            logger.error(f"Error extracting frames from video: {str(e)}")
+            raise e
+    
+    def _process_video_for_verification(self, video_path: str, expected_code: str) -> Dict:
+        """Process video file for verification code detection"""
+        try:
+            # Extract frames from video
+            frame_paths = self._extract_frames_from_video(video_path)
+            
+            best_result = None
+            best_confidence = 0
+            all_ocr_results = []
+            
+            # Process each frame
+            for i, frame_path in enumerate(frame_paths):
+                try:
+                    # Extract text from frame
+                    ocr_result = self._extract_text_from_image(frame_path)
+                    all_ocr_results.append({
+                        'frame': i + 1,
+                        'path': frame_path,
+                        'result': ocr_result
+                    })
+                    
+                    if ocr_result['success']:
+                        # Check if verification code is found in this frame
+                        code_found = self._find_verification_code(ocr_result, expected_code)
+                        
+                        if code_found['found'] and code_found['confidence'] > best_confidence:
+                            best_result = {
+                                'frame': i + 1,
+                                'frame_path': frame_path,
+                                'ocr_result': ocr_result,
+                                'code_found': code_found
+                            }
+                            best_confidence = code_found['confidence']
+                    
+                except Exception as e:
+                    logger.error(f"Error processing frame {i + 1}: {str(e)}")
+                    continue
+            
+            # Clean up frame files
+            for frame_path in frame_paths:
+                try:
+                    os.remove(frame_path)
+                except:
+                    pass
+            
+            if best_result:
+                return {
+                    'success': True,
+                    'video_processed': True,
+                    'total_frames': len(frame_paths),
+                    'best_frame': best_result['frame'],
+                    'ocr_result': best_result['ocr_result'],
+                    'verification_result': best_result['code_found'],
+                    'all_frames_processed': len(all_ocr_results)
+                }
+            else:
+                return {
+                    'success': False,
+                    'video_processed': True,
+                    'total_frames': len(frame_paths),
+                    'error': 'Verification code not found in any frame',
+                    'all_frames_processed': len(all_ocr_results)
+                }
+                
+        except Exception as e:
+            logger.error(f"Error processing video for verification: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
             }
     
     def _find_verification_code(self, ocr_result: Dict, expected_code: str) -> Dict:

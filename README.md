@@ -87,70 +87,66 @@ A comprehensive Raspberry Pi-based system for managing chastity devices, punishm
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Raspberry Pi (3 or 4 recommended) or macOS
+- **Raspberry Pi** (3 or 4 recommended) or **macOS**
 - Python 3.8+
 - Internet connection for email and time sync
 - Camera (optional, for photo verification)
 
-### Installation
+### Installation Options
 
-#### For Raspberry Pi (Recommended)
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/ChastiPi.git
-   cd ChastiPi
-   ```
+#### 🍓 Raspberry Pi (Recommended)
+**For the easiest installation experience:**
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/ChastiPi.git
+cd ChastiPi
 
-2. **Run the install script (recommended)**
-   ```bash
-   bash install.sh
-   ```
-   This will set up a Python virtual environment and install all dependencies.
+# Run the automated installer
+./install_raspberry_pi.sh
+```
 
-3. **Configure the system**
-   ```bash
-   # Edit config.json with your settings
-   nano config.json
-   ```
+**For manual installation:**
+```bash
+# Clone and install manually
+git clone https://github.com/yourusername/ChastiPi.git
+cd ChastiPi
+bash install.sh
+source venv/bin/activate
+python run.py
+```
 
-4. **Run the application**
-   ```bash
-   source venv/bin/activate
-   python run.py
-   ```
+📖 **See [Raspberry Pi Installation Guide](README_RASPBERRY_PI.md) for detailed instructions.**
 
-5. **Access the web interface**
-   ```
-   http://your-pi-ip:5000
-   ```
+#### 🍎 macOS
+**For native Mac app:**
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/ChastiPi.git
+cd ChastiPi
 
-#### For macOS
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/ChastiPi.git
-   cd ChastiPi
-   ```
+# Build Mac app bundle
+./mac_version/build_mac_app.sh
 
-2. **Build Mac app bundle**
-   ```bash
-   ./build_mac_app.sh
-   ```
+# Install and run
+cp -R ChastiPi.app /Applications/
+open /Applications/ChastiPi.app
+```
 
-3. **Install and run**
-   ```bash
-   # Copy to Applications
-   cp -R ChastiPi.app /Applications/
-   
-   # Run the app
-   open /Applications/ChastiPi.app
-   ```
+**For command line installation:**
+```bash
+# Clone and install
+git clone https://github.com/yourusername/ChastiPi.git
+cd ChastiPi
+./mac_version/install_mac.sh
+source venv/bin/activate
+python run.py
+```
 
-4. **Access the web interface**
-   ```
-   http://localhost:5000
-   ```
+📖 **See [Mac Installation Guide](mac_version/README.md) for detailed instructions.**
 
-**Note**: The Mac version includes native macOS features like system notifications, status bar menu, and enhanced security. See `mac_version/README.md` for detailed Mac-specific instructions.
+### Access the Web Interface
+- **Raspberry Pi:** `http://your-pi-ip:5000`
+- **macOS:** `http://localhost:5000`
 
 ## 🧩 Modes System
 
@@ -491,20 +487,26 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 ### Documentation
-- [Cage Check System](docs/cage_check_system.md)
-- [Email Configuration](docs/email_configuration_system.md)
-- [Keyholder Configuration](docs/keyholder_configuration_system.md)
-- [Time Verification](docs/time_verification_security.md)
-- [Remote Access Setup](docs/remote_access_setup.md)
-- [Cage Check Notifications](docs/cage_check_notifications.md)
-- [Email First Approach](docs/email_first_approach.md)
-- [Keyholder Timer Control](docs/keyholder_timer_control.md)
+- **[📚 Documentation Index](docs/README.md)** - Complete documentation guide
+- **[🍓 Raspberry Pi Installation](README_RASPBERRY_PI.md)** - Complete Pi setup instructions
+- **[🍎 Mac Installation](mac_version/README.md)** - macOS setup and app building
+
+#### System Components
+- **[Cage Check System](docs/cage_check_system.md)** - Photo/video verification system
+- **[Email Configuration](docs/email_configuration_system.md)** - Email-based management
+- **[Keyholder Configuration](docs/keyholder_configuration_system.md)** - Settings and permissions
+- **[Time Verification](docs/time_verification_security.md)** - Security and time sync
+- **[Remote Access Setup](docs/remote_access_setup.md)** - Network configuration
 
 ### Troubleshooting
-- Check [Issues](../../issues) for known problems
-- Review logs in `logs/` directory
-- Test email configuration with `/webhook/test`
-- Verify webhook setup with `/webhook/status`
+- **Installation Issues:** Check platform-specific installation guides
+  - [Raspberry Pi Troubleshooting](README_RASPBERRY_PI.md#🛠️-troubleshooting)
+  - [Mac Installation Issues](mac_version/README.md#🐛-common-issues)
+- **NumPy Compatibility:** Use `./fix_numpy_issue.sh` (Raspberry Pi)
+- **General Issues:** Check [Issues](../../issues) for known problems
+- **System Issues:** Review logs in `logs/` directory
+- **Email Issues:** Test email configuration with `/webhook/test`
+- **Webhook Issues:** Verify webhook setup with `/webhook/status`
 
 ### Getting Help
 - Create an issue for bugs or feature requests

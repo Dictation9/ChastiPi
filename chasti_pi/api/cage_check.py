@@ -15,7 +15,7 @@ cage_check_service = CageCheckService()
 
 # Configure upload settings
 UPLOAD_FOLDER = 'uploads/cage_checks'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'mp4', 'mov', 'avi', 'wmv', 'flv', 'webm'}
 
 def allowed_file(filename):
     """Check if file extension is allowed"""

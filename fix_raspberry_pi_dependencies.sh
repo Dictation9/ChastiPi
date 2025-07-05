@@ -87,9 +87,8 @@ sudo apt install -y \
     libx264-dev \
     libjpeg-dev \
     libpng-dev \
-    libtiff-dev \
-    gfortran \
-    libtesseract-dev \
+            libtiff-dev \
+        libtesseract-dev \
     tesseract-ocr \
     tesseract-ocr-eng \
     git \

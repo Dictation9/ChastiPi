@@ -102,7 +102,6 @@ install_system_dependencies() {
         libpng-dev \
         libtiff-dev \
         libatlas-base-dev \
-        gfortran \
         libtesseract-dev \
         tesseract-ocr \
         tesseract-ocr-eng \

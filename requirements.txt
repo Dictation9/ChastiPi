@@ -4,6 +4,7 @@ Werkzeug==2.3.7
 qrcode[pil]==7.4.2
 Pillow==10.0.1
 reportlab==4.0.4
+fpdf==1.7.2
 
 # Image processing (with NumPy compatibility)
 numpy<2.0

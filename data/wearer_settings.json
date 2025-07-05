@@ -1,0 +1,8 @@
+{
+  "wearer1@example.com": {
+    "required_cage_checks": 3
+  },
+  "wearer2@example.com": {
+    "required_cage_checks": 5
+  }
+} 

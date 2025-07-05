@@ -1,0 +1,61 @@
+{
+  // Add your custom modes below. Each mode is a key with its settings as an object.
+  // Example:
+  "my_custom_mode": {
+    "punishments_enabled": false,         // true or false
+    "cage_check_enabled": true,          // true or false
+    "timed_challenges_enabled": false,   // true or false
+    "random_discipline_enabled": false,  // true or false
+    "strict_mode_features_enabled": false, // true or false
+    "instant_unlock_enabled": true       // true or false
+  },
+  "self_hosted_test": {
+    "punishments_enabled": false,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": false,
+    "random_discipline_enabled": false,
+    "strict_mode_features_enabled": false,
+    "instant_unlock_enabled": true
+  },
+  "gentle": {
+    "punishments_enabled": false,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": false,
+    "random_discipline_enabled": false,
+    "strict_mode_features_enabled": false,
+    "instant_unlock_enabled": false
+  },
+  "timed_challenge": {
+    "punishments_enabled": true,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": true,
+    "random_discipline_enabled": false,
+    "strict_mode_features_enabled": false,
+    "instant_unlock_enabled": false
+  },
+  "random_discipline": {
+    "punishments_enabled": true,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": false,
+    "random_discipline_enabled": true,
+    "strict_mode_features_enabled": false,
+    "instant_unlock_enabled": false
+  },
+  "strict": {
+    "punishments_enabled": true,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": true,
+    "random_discipline_enabled": true,
+    "strict_mode_features_enabled": true,
+    "instant_unlock_enabled": false
+  },
+  "extreme": {
+    "punishments_enabled": true,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": true,
+    "random_discipline_enabled": true,
+    "strict_mode_features_enabled": true,
+    "instant_unlock_enabled": false
+  }
+  // You can add more custom modes by copying the structure above.
+} 

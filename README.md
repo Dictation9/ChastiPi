@@ -87,23 +87,25 @@ A comprehensive Raspberry Pi-based system for managing chastity devices, punishm
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Raspberry Pi (3 or 4 recommended)
+- Raspberry Pi (3 or 4 recommended) or macOS
 - Python 3.8+
 - Internet connection for email and time sync
 - Camera (optional, for photo verification)
 
 ### Installation
 
+#### For Raspberry Pi (Recommended)
 1. **Clone the repository**
    ```bash
    git clone https://github.com/yourusername/ChastiPi.git
    cd ChastiPi
    ```
 
-2. **Install dependencies**
+2. **Run the install script (recommended)**
    ```bash
-   pip install -r requirements.txt
+   bash install.sh
    ```
+   This will set up a Python virtual environment and install all dependencies.
 
 3. **Configure the system**
    ```bash
@@ -113,6 +115,7 @@ A comprehensive Raspberry Pi-based system for managing chastity devices, punishm
 
 4. **Run the application**
    ```bash
+   source venv/bin/activate
    python run.py
    ```
 
@@ -120,6 +123,103 @@ A comprehensive Raspberry Pi-based system for managing chastity devices, punishm
    ```
    http://your-pi-ip:5000
    ```
+
+#### For macOS
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ChastiPi.git
+   cd ChastiPi
+   ```
+
+2. **Build Mac app bundle**
+   ```bash
+   ./build_mac_app.sh
+   ```
+
+3. **Install and run**
+   ```bash
+   # Copy to Applications
+   cp -R ChastiPi.app /Applications/
+   
+   # Run the app
+   open /Applications/ChastiPi.app
+   ```
+
+4. **Access the web interface**
+   ```
+   http://localhost:5000
+   ```
+
+**Note**: The Mac version includes native macOS features like system notifications, status bar menu, and enhanced security. See `mac_version/README.md` for detailed Mac-specific instructions.
+
+## 🧩 Modes System
+
+ChastiPi supports multiple operation modes, each with different features and restrictions. You can also define your own custom modes!
+
+### Built-in Modes
+- **self_hosted_test**: For testing. Instant unlocks, no punishments.
+- **gentle**: No punishments, gentle experience.
+- **timed_challenge**: Focus on timed challenges.
+- **random_discipline**: Random punishments or tasks.
+- **strict**: Stricter rules and consequences.
+- **extreme**: All strict features, maximum restrictions.
+
+### Selecting a Mode
+Set the mode in your `config.json`:
+```json
+{
+  "system": {
+    "chastity_mode": "gentle"
+  }
+}
+```
+Replace `gentle` with any mode name you want to use.
+
+### Custom Modes
+You can define your own modes in `custom_modes.json`:
+```json
+{
+  "my_custom_mode": {
+    "punishments_enabled": false,
+    "cage_check_enabled": true,
+    "timed_challenges_enabled": false,
+    "random_discipline_enabled": false,
+    "strict_mode_features_enabled": false,
+    "instant_unlock_enabled": true
+  }
+}
+```
+Then set `chastity_mode` to `my_custom_mode` in `config.json`.
+
+## 🔌 Plugin System
+
+ChastiPi supports a community plugin system! You can add new features by dropping Python files into the `plugins/` folder.
+
+- All plugins in the `plugins/` folder are auto-detected.
+- Enable or disable plugins from the Keyholder Dashboard (or self-manage dashboard if self-hosting).
+- Changes require a restart to take effect.
+
+### Managing Plugins
+- Go to the Keyholder Dashboard.
+- Use the Plugin Management section to toggle plugins on or off.
+- Enabled plugins are loaded at startup.
+
+### Creating a Plugin
+- Create a `.py` file in the `plugins/` folder.
+- Define a function called `register_plugin(app)`.
+- Example:
+
+```python
+# plugins/hello_plugin.py
+def register_plugin(app):
+    @app.route('/hello-plugin')
+    def hello():
+        return 'Hello from plugin!'
+```
+
+### Plugin Safety
+- Only enable plugins you trust.
+- Community plugins can extend or modify any part of the app.
 
 ## 📧 Email Configuration
 

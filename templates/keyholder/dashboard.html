@@ -170,6 +170,53 @@
                 <a href="{{ url_for('keyholder_config.config_dashboard', keyholder_email=keyholder_email) }}" class="btn btn-secondary">🔧 System Configuration</a>
             </div>
         </section>
+
+        <!-- Plugin Management -->
+        <section>
+            <h2>🧩 Plugin Management</h2>
+            <form id="plugin-toggle-form">
+                <table style="width:100%; max-width:500px;">
+                    <tr><th>Plugin</th><th>Enabled</th></tr>
+                    {% for plugin, enabled in plugin_states.items() %}
+                    <tr>
+                        <td>{{ plugin }}</td>
+                        <td>
+                            <input type="checkbox" name="plugin_{{ plugin }}" data-plugin="{{ plugin }}" {% if enabled %}checked{% endif %}>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </form>
+            <div id="plugin-msg"></div>
+        </section>
+
+        <!-- Cage Check Requirements -->
+        <section>
+            <h2>🔒 Cage Check Requirements</h2>
+            <form id="cage-check-settings-form">
+                <table style="width:100%; max-width:900px;">
+                    <tr><th>Wearer</th><th>Required Cage Checks</th><th>Check Time</th><th>Email Notification</th><th>Set</th></tr>
+                    {% for wearer, settings in wearer_settings.items() %}
+                    <tr>
+                        <td>{{ wearer }}</td>
+                        <td>
+                            <input type="number" min="0" name="cage_checks_{{ wearer }}" value="{{ settings.required_cage_checks }}" style="width:60px;">
+                        </td>
+                        <td>
+                            <input type="time" name="cage_time_{{ wearer }}" value="{{ settings.cage_check_time or '' }}" style="width:110px;">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="cage_email_{{ wearer }}" {% if settings.cage_check_email_notification %}checked{% endif %}>
+                        </td>
+                        <td>
+                            <button type="button" class="set-cage-checks-btn" data-wearer="{{ wearer }}">Save</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </form>
+            <div id="cage-check-msg"></div>
+        </section>
     </div>
 
     <script>
@@ -177,6 +224,51 @@
         setTimeout(function() {
             location.reload();
         }, 30000);
+
+        // Plugin toggle AJAX
+        const form = document.getElementById('plugin-toggle-form');
+        if (form) {
+            form.addEventListener('change', function(e) {
+                if (e.target && e.target.dataset.plugin) {
+                    const plugin = e.target.dataset.plugin;
+                    const enable = e.target.checked;
+                    fetch('/keyholder/api/plugins/toggle', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ plugin, enable })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('plugin-msg').innerText = data.success ? `Plugin ${plugin} is now ${enable ? 'enabled' : 'disabled'}. (Restart required)` : 'Error toggling plugin.';
+                    });
+                }
+            });
+        }
+
+        // Cage check requirements AJAX
+        const cageForm = document.getElementById('cage-check-settings-form');
+        if (cageForm) {
+            cageForm.addEventListener('click', function(e) {
+                if (e.target && e.target.classList.contains('set-cage-checks-btn')) {
+                    const wearer = e.target.dataset.wearer;
+                    const input = cageForm.querySelector(`input[name='cage_checks_${wearer}']`);
+                    const timeInput = cageForm.querySelector(`input[name='cage_time_${wearer}']`);
+                    const emailInput = cageForm.querySelector(`input[name='cage_email_${wearer}']`);
+                    const required_cage_checks = parseInt(input.value, 10);
+                    const cage_check_time = timeInput.value;
+                    const cage_check_email_notification = emailInput.checked;
+                    fetch('/keyholder/api/wearer-settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ wearer, required_cage_checks, cage_check_time, cage_check_email_notification })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('cage-check-msg').innerText = data.success ? `Updated for ${wearer}` : 'Error updating.';
+                    });
+                }
+            });
+        }
     </script>
 </body>
 </html> 

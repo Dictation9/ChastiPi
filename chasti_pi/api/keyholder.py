@@ -6,6 +6,7 @@ from flask import Blueprint, request, jsonify, render_template, redirect, url_fo
 from datetime import datetime
 import json
 from pathlib import Path
+import os
 
 from ..services.key_storage_service import KeyStorageService
 from ..services.email_service import EmailService
@@ -22,6 +23,20 @@ email_service = EmailService()
 config_service = ConfigService()
 keyholder_config_service = KeyholderConfigService()
 
+# Plugin management
+PLUGINS_PATH = Path(__file__).parent.parent.parent / "plugins"
+WEARER_SETTINGS_PATH = Path(__file__).parent.parent.parent / "data" / "wearer_settings.json"
+
+def load_wearer_settings():
+    if WEARER_SETTINGS_PATH.exists():
+        with open(WEARER_SETTINGS_PATH, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_wearer_settings(settings):
+    with open(WEARER_SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
 @keyholder_bp.route('/dashboard')
 def dashboard():
     """Keyholder dashboard"""
@@ -37,11 +52,23 @@ def dashboard():
     # Get configuration info
     config_info = config_service.get_config_info("keyholder")
     
+    # Plugin management
+    plugins = []
+    for plugin_file in PLUGINS_PATH.glob("*.py"):
+        if plugin_file.name.startswith("__"): continue
+        plugins.append(plugin_file.stem)
+    enabled_plugins = set(config.get('plugins.enabled_plugins', []))
+    plugin_states = {p: (p in enabled_plugins) for p in plugins}
+    
+    wearer_settings = load_wearer_settings()
+    
     return render_template('keyholder/dashboard.html',
                          active_requests=active_requests,
                          recent_activity=recent_activity,
                          stats=stats,
-                         config_info=config_info)
+                         config_info=config_info,
+                         plugin_states=plugin_states,
+                         wearer_settings=wearer_settings)
 
 @keyholder_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -612,4 +639,52 @@ def api_config_info():
         return jsonify({
             "success": False,
             "error": str(e)
-        }), 500 
+        }), 500
+
+@keyholder_bp.route('/api/plugins', methods=['GET'])
+def get_plugins():
+    """Return list of plugins and their enabled/disabled state."""
+    plugins = []
+    for plugin_file in PLUGINS_PATH.glob("*.py"):
+        if plugin_file.name.startswith("__"): continue
+        plugins.append(plugin_file.stem)
+    enabled_plugins = set(config.get('plugins.enabled_plugins', []))
+    plugin_states = {p: (p in enabled_plugins) for p in plugins}
+    return jsonify(plugin_states)
+
+@keyholder_bp.route('/api/plugins/toggle', methods=['POST'])
+def toggle_plugin():
+    """Enable or disable a plugin."""
+    data = request.get_json()
+    plugin = data.get('plugin')
+    enable = data.get('enable')
+    enabled_plugins = set(config.get('plugins.enabled_plugins', []))
+    if enable:
+        enabled_plugins.add(plugin)
+    else:
+        enabled_plugins.discard(plugin)
+    config.set('plugins.enabled_plugins', list(enabled_plugins))
+    return jsonify({"success": True, "plugin": plugin, "enabled": enable})
+
+@keyholder_bp.route('/api/wearer-settings', methods=['GET'])
+def api_get_wearer_settings():
+    return jsonify(load_wearer_settings())
+
+@keyholder_bp.route('/api/wearer-settings', methods=['POST'])
+def api_set_wearer_settings():
+    data = request.get_json()
+    wearer = data.get('wearer')
+    required_cage_checks = data.get('required_cage_checks')
+    cage_check_time = data.get('cage_check_time')
+    cage_check_email_notification = data.get('cage_check_email_notification')
+    settings = load_wearer_settings()
+    if wearer not in settings:
+        settings[wearer] = {}
+    if required_cage_checks is not None:
+        settings[wearer]['required_cage_checks'] = required_cage_checks
+    if cage_check_time is not None:
+        settings[wearer]['cage_check_time'] = cage_check_time
+    if cage_check_email_notification is not None:
+        settings[wearer]['cage_check_email_notification'] = cage_check_email_notification
+    save_wearer_settings(settings)
+    return jsonify({"success": True, "wearer": wearer, "required_cage_checks": required_cage_checks, "cage_check_time": cage_check_time, "cage_check_email_notification": cage_check_email_notification}) 

@@ -1,0 +1,15 @@
+Flask==2.3.3
+Werkzeug==2.3.7
+qrcode[pil]==7.4.2
+Pillow==10.0.1
+reportlab==4.0.4
+opencv-python==4.8.1.78
+pytesseract==0.3.10
+cryptography==41.0.7
+python-dateutil==2.8.2
+requests==2.31.0
+ntplib==0.4.0
+# Mac-specific additions
+pyobjc-framework-Cocoa==10.1
+pyobjc-framework-SystemConfiguration==10.1
+pyobjc-framework-UserNotifications==10.1 

@@ -20,6 +20,10 @@ from ..api.self_manage import self_manage_bp
 from ..services.email_service import EmailService
 from .scheduler import start_notification_scheduler, stop_notification_scheduler
 import os
+import importlib.util
+import sys
+
+PLUGINS_PATH = Path(__file__).parent.parent.parent / "plugins"
 
 def create_app():
     """Application factory"""
@@ -98,7 +102,10 @@ def create_app():
             app.logger.info("Notification scheduler started successfully")
         except Exception as e:
             app.logger.error(f"Failed to start notification scheduler: {str(e)}")
-    
+
+    # Load plugins
+    load_plugins(app)
+
     # Register cleanup function
     @app.teardown_appcontext
     def cleanup(error):
@@ -141,4 +148,29 @@ def register_blueprints(app):
         from ..api import keyholder_config
         app.register_blueprint(keyholder_config.keyholder_config_bp, url_prefix='/keyholder/config')
     except ImportError:
-        app.logger.warning("Keyholder config blueprint not available") 
+        app.logger.warning("Keyholder config blueprint not available")
+
+def load_plugins(app):
+    if not PLUGINS_PATH.exists():
+        return
+    # Get enabled plugins from config
+    enabled_plugins = set(config.get('plugins.enabled_plugins', []))
+    for plugin_file in PLUGINS_PATH.glob("*.py"):
+        if plugin_file.name.startswith("__"):  # skip __init__.py etc
+            continue
+        plugin_name = plugin_file.stem
+        if enabled_plugins and plugin_name not in enabled_plugins:
+            continue
+        spec = importlib.util.spec_from_file_location(plugin_name, plugin_file)
+        if spec is None or spec.loader is None:
+            app.logger.error(f"Could not load spec for plugin {plugin_file.name}")
+            continue
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[plugin_name] = module
+        try:
+            spec.loader.exec_module(module)
+            if hasattr(module, "register_plugin"):
+                module.register_plugin(app)
+                app.logger.info(f"Loaded plugin: {plugin_file.name}")
+        except Exception as e:
+            app.logger.error(f"Failed to load plugin {plugin_file.name}: {e}") 

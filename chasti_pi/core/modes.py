@@ -2,6 +2,16 @@
 Defines the different chastity modes for the ChastiPi application.
 """
 from ..core.config import config
+import json
+from pathlib import Path
+
+CUSTOM_MODES_PATH = Path(__file__).parent.parent.parent / "custom_modes.json"
+
+def load_custom_modes():
+    if CUSTOM_MODES_PATH.exists():
+        with open(CUSTOM_MODES_PATH, "r") as f:
+            return json.load(f)
+    return {}
 
 class Mode:
     """Base class for all chastity modes."""
@@ -68,6 +78,12 @@ class TestMode(Mode):
         self.random_discipline_enabled = False
         self.strict_mode_features_enabled = False
 
+class CustomMode(Mode):
+    def __init__(self, mode_name: str, settings: dict):
+        self.name = mode_name
+        for k, v in settings.items():
+            setattr(self, k, v)
+
 def get_current_mode() -> Mode:
     """Gets the current chastity mode from the config and returns the corresponding mode object."""
     mode_name = config.get("system.chastity_mode", "gentle")
@@ -80,6 +96,11 @@ def get_current_mode() -> Mode:
         "strict": StrictMode,
         "test": TestMode,
     }
+    
+    # Load custom modes
+    custom_modes = load_custom_modes()
+    if mode_name in custom_modes:
+        return CustomMode(mode_name, custom_modes[mode_name])
     
     mode_class = modes.get(mode_name, GentleMode)
     return mode_class() 

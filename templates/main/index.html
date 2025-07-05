@@ -214,7 +214,7 @@
                     Generate unique punishment sheets with QR codes and verification. 
                     Create custom tasks with time limits and requirements.
                 </div>
-                <a href="{{ url_for('punishment.generate') }}" class="btn btn-danger">Generate Punishment</a>
+                <a href="{{ url_for('punishment.generate_punishment') }}" class="btn btn-danger">Generate Punishment</a>
             </div>
 
             <!-- Photo Upload & Verification -->
@@ -225,7 +225,7 @@
                     Upload photos to verify punishment completion. 
                     Automatic QR code scanning and handwritten number recognition.
                 </div>
-                <a href="{{ url_for('upload.upload_photo') }}" class="btn btn-info">Upload Photo</a>
+                <a href="{{ url_for('upload.upload_form') }}" class="btn btn-info">Upload Photo</a>
             </div>
 
             <!-- Calendar Management -->
@@ -236,7 +236,7 @@
                     Schedule and manage chastity events, punishments, and key release dates. 
                     Track your progress and milestones.
                 </div>
-                <a href="{{ url_for('calendar.view_calendar') }}" class="btn btn-warning">View Calendar</a>
+                <a href="{{ url_for('calendar.calendar_view') }}" class="btn btn-warning">View Calendar</a>
             </div>
         </div>
 
@@ -248,21 +248,21 @@
                     <div class="action-icon">🔑</div>
                     <h3>Request Key Release</h3>
                     <p>Request temporary access to your keys</p>
-                    <a href="{{ url_for('keyholder.request_key_release') }}" class="btn">Request Access</a>
+                    <a href="{{ url_for('keyholder.register') }}" class="btn">Request Access</a>
                 </div>
                 
                 <div class="action-item">
                     <div class="action-icon">📝</div>
                     <h3>Create Punishment</h3>
                     <p>Generate a new punishment sheet</p>
-                    <a href="{{ url_for('punishment.generate') }}" class="btn">Create New</a>
+                    <a href="{{ url_for('punishment.generate_punishment') }}" class="btn">Create New</a>
                 </div>
                 
                 <div class="action-item">
                     <div class="action-icon">📱</div>
                     <h3>Register Device</h3>
                     <p>Add a new chastity device</p>
-                    <a href="{{ url_for('keyholder.register_device') }}" class="btn">Register Device</a>
+                    <a href="{{ url_for('keyholder.register') }}" class="btn">Register Device</a>
                 </div>
                 
                 <div class="action-item">
@@ -276,14 +276,14 @@
                     <div class="action-icon">📊</div>
                     <h3>View History</h3>
                     <p>Check your activity history</p>
-                    <a href="{{ url_for('keyholder.list_requests') }}" class="btn">View History</a>
+                    <a href="{{ url_for('keyholder.requests') }}" class="btn">View History</a>
                 </div>
                 
                 <div class="action-item">
                     <div class="action-icon">🔍</div>
-                    <h3>Lock Status</h3>
-                    <p>Check current lock status</p>
-                    <a href="{{ url_for('main.lock_status') }}" class="btn">Check Status</a>
+                    <h3>System Status</h3>
+                    <p>Check current system status</p>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn">Check Status</a>
                 </div>
             </div>
         </div>

@@ -113,6 +113,10 @@ install_system_dependencies() {
         cmake \
         pkg-config
     
+    # Install system dependencies for Pillow and image processing
+    sudo apt-get update
+    sudo apt-get install -y libjpeg-dev zlib1g-dev libpng-dev libtiff-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python3-tk
+    
     print_status "System dependencies installed successfully"
 }
 

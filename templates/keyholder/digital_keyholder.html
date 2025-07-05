@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Keyholder - Work in Progress</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .wip-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .wip-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .wip-header h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        .wip-header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .wip-content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .wip-icon {
+            font-size: 5em;
+            margin-bottom: 30px;
+        }
+        
+        .wip-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .wip-description {
+            color: #666;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .wip-features {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .wip-features h3 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .wip-features ul {
+            text-align: left;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .wip-features li {
+            margin: 10px 0;
+            color: #666;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 25%;
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        @keyframes progress {
+            0% { width: 25%; }
+            50% { width: 75%; }
+            100% { width: 25%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wip-container">
+        <header class="wip-header">
+            <h1>🔐 Digital Keyholder</h1>
+            <p>Work in Progress</p>
+        </header>
+
+        <div class="wip-content">
+            <div class="wip-icon">🚧</div>
+            <h2 class="wip-title">Coming Soon!</h2>
+            <p class="wip-description">
+                We're working hard to create a dedicated Digital Keyholder interface with enhanced features 
+                and improved user experience. This page will provide comprehensive key management capabilities.
+            </p>
+            
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <p style="color: #666; font-size: 0.9em;">Development Progress: 25%</p>
+        </div>
+
+        <div class="wip-features">
+            <h3>🎯 Planned Features</h3>
+            <ul>
+                <li>📱 <strong>Enhanced Device Registration</strong> - Improved device management interface</li>
+                <li>🔑 <strong>Advanced Key Request System</strong> - Better request tracking and approval workflow</li>
+                <li>📧 <strong>Smart Email Integration</strong> - Enhanced email notification system</li>
+                <li>📊 <strong>Real-time Statistics</strong> - Live dashboard with key management metrics</li>
+                <li>🔒 <strong>Enhanced Security</strong> - Additional security features and encryption</li>
+                <li>⚡ <strong>Quick Actions</strong> - Streamlined common tasks and emergency access</li>
+            </ul>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <a href="{{ url_for('keyholder.dashboard') }}" class="btn">🔐 Current Keyholder Dashboard</a>
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">← Back to Main</a>
+        </div>
+    </div>
+
+    <script>
+        console.log('Digital Keyholder WIP page loaded');
+        
+        // Add some interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate progress updates
+            setTimeout(() => {
+                const progressText = document.querySelector('.wip-content p:last-child');
+                if (progressText) {
+                    progressText.textContent = 'Development Progress: 35%';
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html> 

@@ -203,7 +203,7 @@
                     Securely store and manage your chastity device key codes. 
                     Request temporary access with keyholder approval via email.
                 </div>
-                <a href="{{ url_for('keyholder.dashboard') }}" class="btn btn-success">Manage Keys</a>
+                <a href="{{ url_for('keyholder.digital_keyholder') }}" class="btn btn-success">Digital Keyholder</a>
             </div>
 
             <!-- Punishment System -->
@@ -288,6 +288,13 @@
                     <h3>System Status</h3>
                     <p>Check current system status</p>
                     <a href="{{ url_for('main.dashboard') }}" class="btn">Check Status</a>
+                </div>
+                
+                <div class="action-item">
+                    <div class="action-icon">👑</div>
+                    <h3>Keyholder Dashboard</h3>
+                    <p>Access keyholder management interface</p>
+                    <a href="{{ url_for('keyholder.dashboard') }}" class="btn btn-warning">Keyholder Panel</a>
                 </div>
             </div>
         </div>

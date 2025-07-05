@@ -70,6 +70,11 @@ def dashboard():
                          plugin_states=plugin_states,
                          wearer_settings=wearer_settings)
 
+@keyholder_bp.route('/digital-keyholder')
+def digital_keyholder():
+    """Digital Keyholder Work in Progress page"""
+    return render_template('keyholder/digital_keyholder.html')
+
 @keyholder_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Register keyholder email"""

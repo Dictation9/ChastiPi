@@ -148,10 +148,103 @@ print_header "Update Complete"
 
 print_status "✅ Update completed successfully!"
 print_status ""
-print_status "You can now start ChastiPi with:"
-print_status "  python start_chastipi.py"
+
+# Check if ChastiPi is currently running
+print_status "Checking if ChastiPi is currently running..."
+RUNNING_PID=""
+RUNNING_METHOD=""
+
+# Check for different ways ChastiPi might be running
+if pgrep -f "python.*run.py" > /dev/null; then
+    RUNNING_PID=$(pgrep -f "python.*run.py" | head -1)
+    RUNNING_METHOD="python"
+    print_status "ChastiPi is running via Python (PID: $RUNNING_PID)"
+elif pgrep -f "start_chastipi.sh" > /dev/null; then
+    RUNNING_PID=$(pgrep -f "start_chastipi.sh" | head -1)
+    RUNNING_METHOD="script"
+    print_status "ChastiPi is running via startup script (PID: $RUNNING_PID)"
+elif pgrep -f "chastipi" > /dev/null; then
+    RUNNING_PID=$(pgrep -f "chastipi" | head -1)
+    RUNNING_METHOD="systemd"
+    print_status "ChastiPi is running via systemd service (PID: $RUNNING_PID)"
+elif systemctl is-active --quiet chastipi; then
+    RUNNING_METHOD="systemd"
+    print_status "ChastiPi is running via systemd service"
+else
+    print_status "ChastiPi is not currently running."
+fi
+    
+    # Ask user if they want to auto-restart
+    echo ""
+    read -p "Do you want to automatically restart ChastiPi to apply updates? (y/N): " -r response
+    if [[ "$response" =~ ^[Yy]$ ]]; then
+        print_status "Stopping ChastiPi..."
+        
+        # Stop based on how it's running
+        if [[ "$RUNNING_METHOD" == "systemd" ]]; then
+            sudo systemctl stop chastipi
+            sleep 2
+        elif [[ -n "$RUNNING_PID" ]]; then
+            kill $RUNNING_PID
+            sleep 3
+            
+            # Check if process is still running
+            if kill -0 $RUNNING_PID 2>/dev/null; then
+                print_warning "Process didn't stop gracefully, forcing termination..."
+                kill -9 $RUNNING_PID
+                sleep 1
+            fi
+        fi
+        
+        print_status "Starting ChastiPi..."
+        
+        # Start based on how it was running
+        if [[ "$RUNNING_METHOD" == "systemd" ]]; then
+            sudo systemctl start chastipi
+            sleep 2
+            
+            if systemctl is-active --quiet chastipi; then
+                print_status "✅ ChastiPi restarted successfully via systemd!"
+                print_status "📊 Access the web interface at: http://localhost:5000"
+                print_status "📋 Check status with: sudo systemctl status chastipi"
+            else
+                print_error "❌ Failed to restart ChastiPi via systemd"
+                print_status "Please check with: sudo systemctl status chastipi"
+            fi
+        else
+            # Start with the same method it was running
+            nohup python run.py > logs/chasti_pi.log 2>&1 &
+            NEW_PID=$!
+            
+            # Wait a moment for the process to start
+            sleep 2
+            
+            if kill -0 $NEW_PID 2>/dev/null; then
+                print_status "✅ ChastiPi restarted successfully! (PID: $NEW_PID)"
+                print_status "📊 Access the web interface at: http://localhost:5000"
+                print_status "📋 Check logs with: tail -f logs/chasti_pi.log"
+            else
+                print_error "❌ Failed to restart ChastiPi"
+                print_status "Please start manually with: python run.py"
+            fi
+        fi
+    else
+        print_status "ChastiPi was not restarted automatically."
+        print_status "Please restart manually when ready:"
+        if [[ "$RUNNING_METHOD" == "systemd" ]]; then
+            print_status "  sudo systemctl restart chastipi"
+        else
+            print_status "  python run.py"
+        fi
+    fi
+else
+    print_status "ChastiPi is not currently running."
+    print_status "You can start it with:"
+    print_status "  python run.py"
+    print_status "  or"
+    print_status "  ./start_chastipi.sh"
+fi
+
 print_status ""
 print_status "Or test everything with:"
-print_status "  python test_all_fixes.py"
-print_status ""
-print_status "If ChastiPi is running, please restart it to apply updates." 
+print_status "  python test_all_fixes.py" 

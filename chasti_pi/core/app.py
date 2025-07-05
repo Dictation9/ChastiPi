@@ -6,6 +6,8 @@ from pathlib import Path
 import logging
 from .config import config
 from .modes import get_current_mode
+from .dependencies import setup_dependencies
+from ..services.service_fixes import apply_all_service_fixes
 from ..api.main import main_bp
 from ..api.punishment import bp as punishment_bp
 from ..api.calendar import bp as calendar_bp
@@ -28,6 +30,13 @@ PLUGINS_PATH = Path(__file__).parent.parent.parent / "plugins"
 
 def create_app():
     """Application factory"""
+    # Setup dependencies first
+    if not setup_dependencies():
+        raise RuntimeError("Failed to setup dependencies. Please check the logs and install missing packages manually.")
+    
+    # Apply service fixes
+    apply_all_service_fixes()
+    
     app = Flask(__name__, template_folder='../../templates', static_folder='../../static')
     
     # Secret key for session management

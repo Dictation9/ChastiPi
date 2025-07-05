@@ -1,86 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChastiPi Calendar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>📅 ChastiPi Calendar</h1>
-            <nav>
-                <a href="{{ url_for('main.index') }}" class="btn">← Back to Dashboard</a>
-            </nav>
-        </header>
+{% extends "base.html" %}
 
-        <main>
-            <div class="calendar-container">
-                <div class="calendar-header">
-                    <h2>Calendar Events</h2>
-                    <button id="addEventBtn" class="btn btn-success">+ Add Event</button>
+{% block title %}Calendar - ChastiPi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">📅 Calendar</h1>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Calendar Events</h5>
                 </div>
-
-                <div class="calendar-content">
-                    <div id="calendar" class="calendar-grid">
-                        <!-- Calendar will be populated by JavaScript -->
-                        <p>Loading calendar...</p>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Calendar Feature:</strong> This feature is currently under development.
+                        <br>
+                        Future updates will include:
+                        <ul>
+                            <li>Event scheduling and management</li>
+                            <li>Progress tracking</li>
+                            <li>Reminder system</li>
+                            <li>Integration with external calendars</li>
+                        </ul>
                     </div>
-                </div>
-
-                <div class="events-list">
-                    <h3>Upcoming Events</h3>
-                    <div id="eventsList">
-                        <!-- Events will be populated by JavaScript -->
-                        <p>Loading events...</p>
+                    
+                    <div class="text-center">
+                        <p class="text-muted">Calendar functionality coming soon!</p>
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+                            ← Back to Dashboard
+                        </a>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
-
-    <script>
-        // Basic calendar functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Calendar page loaded');
-            
-            // Load events
-            loadEvents();
-        });
-
-        async function loadEvents() {
-            try {
-                const response = await fetch('/calendar/events');
-                const events = await response.json();
-                
-                const eventsList = document.getElementById('eventsList');
-                if (events && events.length > 0) {
-                    let html = '<div class="events-grid">';
-                    events.forEach(event => {
-                        html += `
-                            <div class="event-card">
-                                <h4>${event.title}</h4>
-                                <p>${event.description || 'No description'}</p>
-                                <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString()}</p>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    eventsList.innerHTML = html;
-                } else {
-                    eventsList.innerHTML = '<p>No upcoming events</p>';
-                }
-            } catch (error) {
-                console.error('Error loading events:', error);
-                document.getElementById('eventsList').innerHTML = '<p>Error loading events</p>';
-            }
-        }
-
-        // Add event functionality
-        document.getElementById('addEventBtn').addEventListener('click', function() {
-            alert('Add event functionality coming soon!');
-        });
-    </script>
-</body>
-</html> 
+</div>
+{% endblock %} 

@@ -126,7 +126,8 @@
             "cage_check": true,
             "punishment_complete": true,
             "time_drift": true,
-            "system_error": true
+            "system_error": true,
+            "update_available": true
         },
         "quiet_hours": {
             "enabled": false,
@@ -141,6 +142,8 @@
         "backup_retention_days": 30,
         "auto_update": false,
         "update_check_interval_days": 7,
+        "auto_download_updates": false,
+        "backup_before_update": true,
         "health_check_interval_minutes": 30
     },
     "development": {

@@ -1,4 +1,11 @@
             <div class="dashboard-section">
+                <h3>🔄 System Updates</h3>
+                <div id="update-status">
+                    <div class="loading">Checking for updates...</div>
+                </div>
+            </div>
+
+            <div class="dashboard-section">
                 <h3>🔒 Security & System</h3>
                 <div class="dashboard-links">
                     <a href="{{ url_for('main.time_status') }}" class="dashboard-link">
@@ -15,6 +22,11 @@
                         <span class="link-icon">🔒</span>
                         <span class="link-text">Cage Check System</span>
                         <span class="link-desc">Verify cage/lock with photos</span>
+                    </a>
+                    <a href="{{ url_for('update.update_dashboard') }}" class="dashboard-link">
+                        <span class="link-icon">🔄</span>
+                        <span class="link-text">Update Management</span>
+                        <span class="link-desc">Check and install system updates</span>
                     </a>
                 </div>
             </div> 

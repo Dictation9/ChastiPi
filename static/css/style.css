@@ -261,4 +261,147 @@ a:hover {
         width: 100%;
         margin: 5px 0;
     }
+}
+
+/* Update Status Styles */
+.update-available {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.update-current {
+    background: #e2e3e5;
+    border: 1px solid #d6d8db;
+    color: #383d41;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.update-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.update-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.update-actions .btn {
+    font-size: 14px;
+    padding: 8px 16px;
+}
+
+/* Dashboard Section Styles */
+.dashboard-section {
+    background: white;
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.dashboard-link {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.dashboard-link:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.link-icon {
+    font-size: 1.5em;
+    margin-right: 15px;
+    min-width: 30px;
+}
+
+.link-text {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.link-desc {
+    font-size: 0.9em;
+    color: #666;
+    display: block;
+}
+
+/* Navigation Styles */
+nav {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.nav-link {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 5px;
+    transition: background 0.3s ease;
+}
+
+.nav-link:hover {
+    background: #2980b9;
+}
+
+/* Alert Styles */
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
 } 

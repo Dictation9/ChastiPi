@@ -17,6 +17,7 @@ from ..api.webhook import webhook_bp
 from ..api.keyholder_config import keyholder_config_bp
 from ..api.setup import setup_bp
 from ..api.self_manage import self_manage_bp
+from ..api.update import update_bp
 from ..services.email_service import EmailService
 from .scheduler import start_notification_scheduler, stop_notification_scheduler
 import os
@@ -51,6 +52,7 @@ def create_app():
     app.register_blueprint(keyholder_config_bp, url_prefix='/keyholder/config')
     app.register_blueprint(setup_bp)
     app.register_blueprint(self_manage_bp)
+    app.register_blueprint(update_bp)
     
     @app.before_request
     def before_request_tasks():

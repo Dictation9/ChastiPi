@@ -4,6 +4,8 @@ Main Flask application factory for ChastiPi
 from flask import Flask, request, redirect, url_for, flash, g, current_app
 from pathlib import Path
 import logging
+import time
+import uuid
 from .config import config
 from .modes import get_current_mode
 from .dependencies import setup_dependencies
@@ -125,22 +127,79 @@ def create_app():
     return app
 
 def setup_logging(app):
-    """Setup application logging"""
-    log_dir = Path('logs')
-    log_dir.mkdir(exist_ok=True)
+    """Setup enhanced application logging"""
+    from ..services.logging_service import enhanced_logger
     
-    log_level = config.get('log_level', 'INFO')
-    if log_level is None:
-        log_level = 'INFO'
+    # Initialize enhanced logging
+    app.logger = enhanced_logger.app_logger
     
-    logging.basicConfig(
-        level=getattr(logging, log_level),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(log_dir / 'chasti_pi.log'),
-            logging.StreamHandler()
-        ]
-    )
+    # Add request logging middleware
+    @app.before_request
+    def log_request_start():
+        """Log request start"""
+        g.start_time = time.time()
+        g.request_id = str(uuid.uuid4())[:8]
+        
+        enhanced_logger.log_debug(
+            f"Request started: {request.method} {request.path}",
+            {
+                'request_id': g.request_id,
+                'ip': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                'referrer': request.headers.get('Referer', 'None')
+            }
+        )
+    
+    @app.after_request
+    def log_request_end(response):
+        """Log request completion"""
+        if hasattr(g, 'start_time'):
+            duration = time.time() - g.start_time
+            
+            enhanced_logger.log_request({
+                'method': request.method,
+                'path': request.path,
+                'status': response.status_code,
+                'duration': duration,
+                'ip': request.remote_addr,
+                'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                'request_id': getattr(g, 'request_id', 'unknown')
+            })
+            
+            # Log security events for suspicious requests
+            if response.status_code == 403 or response.status_code == 401:
+                enhanced_logger.log_security_event('unauthorized_access', {
+                    'ip': request.remote_addr,
+                    'path': request.path,
+                    'user_agent': request.headers.get('User-Agent', 'Unknown'),
+                    'status_code': response.status_code
+                })
+            
+            # Log slow requests
+            if duration > 2.0:  # More than 2 seconds
+                enhanced_logger.log_warning(
+                    f"Very slow request: {request.method} {request.path} took {duration:.3f}s",
+                    {
+                        'request_id': getattr(g, 'request_id', 'unknown'),
+                        'duration': duration,
+                        'ip': request.remote_addr
+                    }
+                )
+        
+        return response
+    
+    @app.errorhandler(Exception)
+    def log_exception(error):
+        """Log all exceptions"""
+        enhanced_logger.log_error(error, {
+            'request_method': request.method,
+            'request_path': request.path,
+            'request_ip': request.remote_addr,
+            'user_agent': request.headers.get('User-Agent', 'Unknown')
+        })
+        
+        # Return a generic error response
+        return "An error occurred", 500
 
 def register_blueprints(app):
     """Register Flask blueprints"""

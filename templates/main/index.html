@@ -518,11 +518,29 @@
                             border: none; 
                             border-radius: 5px; 
                             cursor: pointer;
-                        ">📋 View Logs</button>
+                        ">📋 Enhanced Logs</button>
+                        
+                        <button class="adminBtn" onclick="checkPerformance()" style="
+                            padding: 10px; 
+                            background: #28a745; 
+                            color: white; 
+                            border: none; 
+                            border-radius: 5px; 
+                            cursor: pointer;
+                        ">📊 Performance</button>
+                        
+                        <button class="adminBtn" onclick="checkErrors()" style="
+                            padding: 10px; 
+                            background: #ffc107; 
+                            color: #212529; 
+                            border: none; 
+                            border-radius: 5px; 
+                            cursor: pointer;
+                        ">❌ Error Stats</button>
                         
                         <button class="adminBtn" onclick="checkConfig()" style="
                             padding: 10px; 
-                            background: #28a745; 
+                            background: #6f42c1; 
                             color: white; 
                             border: none; 
                             border-radius: 5px; 
@@ -531,8 +549,8 @@
                         
                         <button class="adminBtn" onclick="testDatabase()" style="
                             padding: 10px; 
-                            background: #ffc107; 
-                            color: #212529; 
+                            background: #fd7e14; 
+                            color: white; 
                             border: none; 
                             border-radius: 5px; 
                             cursor: pointer;
@@ -606,12 +624,124 @@
         
         function checkSystemLogs() {
             fetch('/api/system/logs')
-                .then(response => response.text())
+                .then(response => response.json())
                 .then(data => {
-                    alert('System Logs:\n\n' + data.substring(0, 1000) + (data.length > 1000 ? '\n\n... (truncated)' : ''));
+                    if (data.status === 'success') {
+                        let logContent = '=== ENHANCED SYSTEM LOGS ===\n\n';
+                        
+                        // Performance stats
+                        if (data.performance_stats) {
+                            logContent += '📊 PERFORMANCE STATISTICS:\n';
+                            if (data.performance_stats.requests) {
+                                logContent += `Total Requests: ${data.performance_stats.requests.total}\n`;
+                                logContent += `Avg Duration: ${data.performance_stats.requests.avg_duration.toFixed(3)}s\n`;
+                                logContent += `Slow Requests: ${data.performance_stats.requests.slow_requests}\n\n`;
+                            }
+                        }
+                        
+                        // Recent errors
+                        if (data.recent_errors && data.recent_errors.length > 0) {
+                            logContent += '❌ RECENT ERRORS:\n';
+                            data.recent_errors.forEach(error => {
+                                logContent += `${error.error_type}: ${error.count} occurrences\n`;
+                            });
+                            logContent += '\n';
+                        }
+                        
+                        // Log files
+                        if (data.log_files) {
+                            logContent += '📋 LOG FILES:\n';
+                            Object.keys(data.log_files).forEach(filename => {
+                                logContent += `\n--- ${filename} ---\n`;
+                                const lines = data.log_files[filename];
+                                logContent += lines.slice(-10).join('\n'); // Last 10 lines
+                            });
+                        }
+                        
+                        alert('Enhanced System Logs:\n\n' + logContent.substring(0, 2000) + (logContent.length > 2000 ? '\n\n... (truncated)' : ''));
+                    } else {
+                        alert('Error loading logs: ' + data.message);
+                    }
                 })
                 .catch(error => {
                     alert('Error loading logs: ' + error.message);
+                });
+        }
+        
+        function checkPerformance() {
+            fetch('/api/system/performance')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        let perfContent = '=== PERFORMANCE STATISTICS ===\n\n';
+                        
+                        if (data.performance_stats) {
+                            const stats = data.performance_stats;
+                            
+                            if (stats.requests) {
+                                perfContent += '📊 REQUEST STATISTICS:\n';
+                                perfContent += `Total Requests: ${stats.requests.total}\n`;
+                                perfContent += `Average Duration: ${stats.requests.avg_duration.toFixed(3)}s\n`;
+                                perfContent += `Max Duration: ${stats.requests.max_duration.toFixed(3)}s\n`;
+                                perfContent += `Min Duration: ${stats.requests.min_duration.toFixed(3)}s\n`;
+                                perfContent += `Slow Requests (>1s): ${stats.requests.slow_requests}\n\n`;
+                            }
+                            
+                            if (stats.errors) {
+                                perfContent += '❌ ERROR STATISTICS:\n';
+                                Object.keys(stats.errors).forEach(errorType => {
+                                    perfContent += `${errorType}: ${stats.errors[errorType]} occurrences\n`;
+                                });
+                                perfContent += '\n';
+                            }
+                            
+                            // Other performance metrics
+                            Object.keys(stats).forEach(key => {
+                                if (key !== 'requests' && key !== 'errors') {
+                                    perfContent += `📈 ${key.toUpperCase()}:\n`;
+                                    const metric = stats[key];
+                                    perfContent += `  Count: ${metric.count}\n`;
+                                    perfContent += `  Avg Duration: ${metric.avg_duration.toFixed(3)}s\n`;
+                                    perfContent += `  Max Duration: ${metric.max_duration.toFixed(3)}s\n\n`;
+                                }
+                            });
+                        }
+                        
+                        alert('Performance Statistics:\n\n' + perfContent.substring(0, 2000) + (perfContent.length > 2000 ? '\n\n... (truncated)' : ''));
+                    } else {
+                        alert('Error loading performance stats: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error loading performance stats: ' + error.message);
+                });
+        }
+        
+        function checkErrors() {
+            fetch('/api/system/errors')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        let errorContent = '=== ERROR STATISTICS ===\n\n';
+                        
+                        if (data.recent_errors && data.recent_errors.length > 0) {
+                            errorContent += '❌ RECENT ERRORS:\n';
+                            data.recent_errors.forEach(error => {
+                                errorContent += `• ${error.error_type}: ${error.count} occurrences\n`;
+                            });
+                        } else {
+                            errorContent += '✅ No recent errors detected\n';
+                        }
+                        
+                        errorContent += `\n📅 Generated: ${new Date().toLocaleString()}`;
+                        
+                        alert('Error Statistics:\n\n' + errorContent);
+                    } else {
+                        alert('Error loading error stats: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error loading error stats: ' + error.message);
                 });
         }
         

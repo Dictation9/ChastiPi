@@ -7,6 +7,7 @@ import json
 import subprocess
 import time
 import logging
+from pathlib import Path
 
 from chasti_pi.services.config_service import ConfigService
 from chasti_pi.services.key_storage_service import KeyStorageService
@@ -14,6 +15,7 @@ from chasti_pi.services.cage_check_service import CageCheckService
 from chasti_pi.services.punishment_service import PunishmentService
 from chasti_pi.services.time_verification_service import TimeVerificationService
 from chasti_pi.core.config import config
+from chasti_pi.services.logging_service import enhanced_logger
 
 # Initialize services
 config_service = ConfigService()
@@ -236,23 +238,114 @@ def api_system_status():
         }), 500
 
 @main_bp.route('/api/system/logs')
-def api_system_logs():
-    """API endpoint for system logs"""
+def api_logs():
+    """Get system logs for debugging"""
     try:
-        import os
+        # Get log files
+        log_dir = Path('logs')
+        log_files = {}
         
-        log_file = "logs/chasti_pi.log"
-        if os.path.exists(log_file):
-            with open(log_file, 'r') as f:
-                # Get last 50 lines
-                lines = f.readlines()
-                recent_logs = lines[-50:] if len(lines) > 50 else lines
-                return ''.join(recent_logs)
-        else:
-            return "No log file found"
-    
+        for log_file in log_dir.glob('*.log'):
+            try:
+                with open(log_file, 'r') as f:
+                    content = f.read()
+                    # Get last 50 lines
+                    lines = content.split('\n')
+                    log_files[log_file.name] = lines[-50:] if len(lines) > 50 else lines
+            except Exception as e:
+                log_files[log_file.name] = [f"Error reading log file: {str(e)}"]
+        
+        # Get performance stats
+        performance_stats = enhanced_logger.get_performance_stats()
+        
+        # Get recent errors
+        recent_errors = enhanced_logger.get_recent_errors()
+        
+        return jsonify({
+            'status': 'success',
+            'log_files': log_files,
+            'performance_stats': performance_stats,
+            'recent_errors': recent_errors,
+            'timestamp': datetime.now().isoformat()
+        })
+        
     except Exception as e:
-        return f"Error reading logs: {str(e)}"
+        logger.error(f"Error getting logs: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Error retrieving logs: {str(e)}'
+        }), 500
+
+@main_bp.route('/api/system/logs/<log_type>')
+def api_specific_logs(log_type):
+    """Get specific log type"""
+    try:
+        log_file = Path('logs') / f'{log_type}.log'
+        
+        if not log_file.exists():
+            return jsonify({
+                'status': 'error',
+                'message': f'Log file {log_type}.log not found'
+            }), 404
+        
+        with open(log_file, 'r') as f:
+            content = f.read()
+            lines = content.split('\n')
+            # Get last 100 lines
+            recent_lines = lines[-100:] if len(lines) > 100 else lines
+        
+        return jsonify({
+            'status': 'success',
+            'log_type': log_type,
+            'lines': recent_lines,
+            'total_lines': len(lines),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting {log_type} logs: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Error retrieving {log_type} logs: {str(e)}'
+        }), 500
+
+@main_bp.route('/api/system/performance')
+def api_performance():
+    """Get performance statistics"""
+    try:
+        stats = enhanced_logger.get_performance_stats()
+        
+        return jsonify({
+            'status': 'success',
+            'performance_stats': stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting performance stats: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Error retrieving performance stats: {str(e)}'
+        }), 500
+
+@main_bp.route('/api/system/errors')
+def api_errors():
+    """Get error statistics and recent errors"""
+    try:
+        recent_errors = enhanced_logger.get_recent_errors()
+        
+        return jsonify({
+            'status': 'success',
+            'recent_errors': recent_errors,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting error stats: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Error retrieving error stats: {str(e)}'
+        }), 500
 
 @main_bp.route('/api/system/config')
 def api_system_config():

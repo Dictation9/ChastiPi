@@ -215,7 +215,7 @@
                     Generate unique punishment sheets with QR codes and verification. 
                     Create custom tasks with time limits and requirements.
                 </div>
-                <a href="{{ url_for('punishment.generate_punishment') }}" class="btn btn-danger">Generate Punishment</a>
+                                    <a href="{{ url_for('punishment.punishment_page') }}" class="btn btn-danger">Generate Punishment</a>
             </div>
             {% endif %}
 
@@ -258,7 +258,7 @@
                     <div class="action-icon">📝</div>
                     <h3>Create Punishment</h3>
                     <p>Generate a new punishment sheet</p>
-                    <a href="{{ url_for('punishment.generate_punishment') }}" class="btn">Create New</a>
+                    <a href="{{ url_for('punishment.punishment_page') }}" class="btn">Create New</a>
                 </div>
                 {% endif %}
                 

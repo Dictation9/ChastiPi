@@ -1,7 +1,8 @@
 """
 Punishment API routes for ChastiPi
 """
-from flask import Blueprint, render_template, request, jsonify
+import os
+from flask import Blueprint, render_template, request, jsonify, send_file
 from chasti_pi.services.punishment_service import PunishmentService
 
 bp = Blueprint('punishment', __name__)
@@ -104,6 +105,44 @@ def punishment_stats():
                 "completion_rate": (completed / total * 100) if total > 0 else 0
             }
         })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@bp.route('/download/<punishment_id>/<file_type>')
+def download_punishment_file(punishment_id, file_type):
+    """Download punishment PDF or QR code"""
+    try:
+        punishment = punishment_service.get_punishment_by_id(punishment_id)
+        if not punishment:
+            return jsonify({
+                "success": False,
+                "error": "Punishment not found"
+            }), 404
+        
+        if file_type == "pdf":
+            file_path = punishment.get("pdf_path")
+            filename = punishment.get("pdf_filename", f"{punishment_id}.pdf")
+        elif file_type == "qr":
+            file_path = punishment.get("qr_path")
+            filename = punishment.get("qr_filename", f"{punishment_id}_qr.png")
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Invalid file type"
+            }), 400
+        
+        if not file_path or not os.path.exists(file_path):
+            return jsonify({
+                "success": False,
+                "error": "File not found"
+            }), 404
+        
+        from flask import send_file
+        return send_file(file_path, as_attachment=True, download_name=filename)
+        
     except Exception as e:
         return jsonify({
             "success": False,

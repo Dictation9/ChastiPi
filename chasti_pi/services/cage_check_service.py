@@ -1055,4 +1055,42 @@ A verification request has expired without completion.
         all_checks = list(self.cage_checks.values())
         # Sort by created_at (newest first)
         all_checks.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-        return all_checks[:limit] 
+        return all_checks[:limit]
+    
+    def get_statistics(self) -> Dict:
+        """Get cage check statistics for dashboard"""
+        try:
+            all_checks = list(self.cage_checks.values())
+            
+            stats = {
+                'total_checks': len(all_checks),
+                'pending': 0,
+                'completed': 0,
+                'failed': 0,
+                'expired': 0,
+                'cancelled': 0,
+                'success_rate': 0
+            }
+            
+            for check in all_checks:
+                status = check.get('status', 'unknown')
+                if status in stats:
+                    stats[status] += 1
+            
+            # Calculate success rate
+            if stats['completed'] + stats['failed'] > 0:
+                stats['success_rate'] = (stats['completed'] / (stats['completed'] + stats['failed'])) * 100
+            
+            return stats
+            
+        except Exception as e:
+            logger.error(f"Error getting cage check statistics: {str(e)}")
+            return {
+                'total_checks': 0,
+                'pending': 0,
+                'completed': 0,
+                'failed': 0,
+                'expired': 0,
+                'cancelled': 0,
+                'success_rate': 0
+            } 

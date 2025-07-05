@@ -4,6 +4,7 @@ Main API routes for ChastiPi
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from datetime import datetime
 import json
+import subprocess
 
 from chasti_pi.services.config_service import ConfigService
 from chasti_pi.services.key_storage_service import KeyStorageService
@@ -322,4 +323,24 @@ def api_permissions_info():
         return jsonify({
             "success": False,
             "error": str(e)
-        }), 500 
+        }), 500
+
+@main_bp.route('/update/manual', methods=['POST'])
+def manual_update():
+    """Pull latest code from GitHub and update dependencies."""
+    try:
+        # Pull latest code
+        git_pull = subprocess.run(['git', 'pull'], capture_output=True, text=True, timeout=60)
+        git_output = git_pull.stdout + '\n' + git_pull.stderr
+        
+        # Update dependencies
+        pip_install = subprocess.run(['pip3', 'install', '-r', 'requirements.txt'], capture_output=True, text=True, timeout=120)
+        pip_output = pip_install.stdout + '\n' + pip_install.stderr
+
+        return jsonify({
+            'success': True,
+            'git_output': git_output,
+            'pip_output': pip_output
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}) 

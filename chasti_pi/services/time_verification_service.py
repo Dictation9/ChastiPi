@@ -345,4 +345,8 @@ class TimeVerificationService:
             return {
                 'valid': False,
                 'error': str(e)
-            } 
+            }
+    
+    def get_status(self) -> Dict:
+        """Get current time verification status (alias for get_time_status)"""
+        return self.get_time_status() 

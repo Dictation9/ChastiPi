@@ -209,4 +209,17 @@ class PunishmentService:
     
     def is_punishment_unique(self, punishment_id):
         """Check if punishment ID is unique"""
-        return not any(record["id"] == punishment_id for record in self.history) 
+        return not any(record["id"] == punishment_id for record in self.history)
+    
+    def get_statistics(self):
+        """Get punishment statistics"""
+        total = len(self.history)
+        completed = sum(1 for record in self.history if record.get("completed", False))
+        pending = total - completed
+        
+        return {
+            "total": total,
+            "completed": completed,
+            "pending": pending,
+            "completion_rate": (completed / total * 100) if total > 0 else 0
+        } 

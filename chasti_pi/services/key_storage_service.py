@@ -447,4 +447,23 @@ class KeyStorageService:
             "approved_requests": approved_requests,
             "denied_requests": denied_requests,
             "total_devices": len(self.devices)
+        }
+    
+    def get_keyholder_info(self):
+        """Get keyholder information for dashboard"""
+        # Get unique keyholder emails from devices
+        keyholder_emails = set()
+        for device in self.devices.values():
+            if "keyholder_email" in device:
+                keyholder_emails.add(device["keyholder_email"])
+        
+        # Get registered status
+        registered = len(keyholder_emails) > 0
+        keyholder_email = list(keyholder_emails)[0] if keyholder_emails else None
+        
+        return {
+            "registered": registered,
+            "email": keyholder_email,
+            "total_devices": len(self.devices),
+            "active_requests": len(self.get_active_requests())
         } 

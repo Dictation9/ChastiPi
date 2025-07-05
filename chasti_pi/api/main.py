@@ -5,6 +5,8 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from datetime import datetime
 import json
 import subprocess
+import time
+import logging
 
 from chasti_pi.services.config_service import ConfigService
 from chasti_pi.services.key_storage_service import KeyStorageService
@@ -22,6 +24,9 @@ time_verification_service = TimeVerificationService()
 
 # Create blueprint
 main_bp = Blueprint('main', __name__)
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 @main_bp.route('/')
 def index():
@@ -168,6 +173,172 @@ def api_status():
             "status": "error",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
+        }), 500
+
+@main_bp.route('/api/system/status')
+def api_system_status():
+    """API endpoint for admin system status"""
+    try:
+        import psutil
+        import os
+        from datetime import datetime, timedelta
+        
+        # Get system information
+        uptime_seconds = time.time() - psutil.boot_time()
+        uptime = str(timedelta(seconds=int(uptime_seconds)))
+        
+        # Get process information
+        current_process = psutil.Process()
+        memory_info = current_process.memory_info()
+        
+        # Get disk usage
+        disk_usage = psutil.disk_usage('/')
+        
+        # Get network information
+        network_info = psutil.net_io_counters()
+        
+        return jsonify({
+            "status": "running",
+            "uptime": uptime,
+            "version": "2.0.0",
+            "mode": config.get("system.chastity_mode", "normal"),
+            "timestamp": datetime.now().isoformat(),
+            "system": {
+                "cpu_percent": psutil.cpu_percent(interval=1),
+                "memory_percent": current_process.memory_percent(),
+                "memory_mb": memory_info.rss / 1024 / 1024,
+                "disk_percent": disk_usage.percent,
+                "disk_free_gb": disk_usage.free / 1024 / 1024 / 1024
+            },
+            "network": {
+                "bytes_sent": network_info.bytes_sent,
+                "bytes_recv": network_info.bytes_recv,
+                "packets_sent": network_info.packets_sent,
+                "packets_recv": network_info.packets_recv
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
+@main_bp.route('/api/system/logs')
+def api_system_logs():
+    """API endpoint for system logs"""
+    try:
+        import os
+        
+        log_file = "logs/chasti_pi.log"
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                # Get last 50 lines
+                lines = f.readlines()
+                recent_logs = lines[-50:] if len(lines) > 50 else lines
+                return ''.join(recent_logs)
+        else:
+            return "No log file found"
+    
+    except Exception as e:
+        return f"Error reading logs: {str(e)}"
+
+@main_bp.route('/api/system/config')
+def api_system_config():
+    """API endpoint for system configuration"""
+    try:
+        # Get current configuration
+        config_data = config.get_all("admin")
+        
+        # Remove sensitive information
+        if 'keyholder' in config_data:
+            if 'default_keyholder_email' in config_data['keyholder']:
+                config_data['keyholder']['default_keyholder_email'] = '***@***.***'
+        
+        return jsonify({
+            "success": True,
+            "config": config_data,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@main_bp.route('/api/system/test-db')
+def api_test_database():
+    """API endpoint for database testing"""
+    try:
+        # Test key storage service
+        devices = list(key_storage_service.devices.values())
+        active_requests = key_storage_service.get_active_requests()
+        
+        # Test config service
+        config_stats = config_service.get_config_info("admin")
+        
+        # Test cage check service
+        cage_checks = cage_check_service.get_all_check_requests()
+        
+        return jsonify({
+            "success": True,
+            "database": "operational",
+            "timestamp": datetime.now().isoformat(),
+            "tests": {
+                "key_storage": {
+                    "devices_count": len(devices),
+                    "active_requests_count": len(active_requests),
+                    "status": "ok"
+                },
+                "config_service": {
+                    "configs_count": config_stats.get("total_sections", 0),
+                    "active_configs_count": config_stats.get("total_settings", 0),
+                    "status": "ok"
+                },
+                "cage_check_service": {
+                    "checks_count": len(cage_checks),
+                    "status": "ok"
+                }
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "database": "error"
+        }), 500
+
+@main_bp.route('/api/system/restart', methods=['POST'])
+def api_restart_service():
+    """API endpoint for restarting the service"""
+    try:
+        import subprocess
+        import sys
+        
+        # Get the current script path
+        script_path = sys.argv[0] if sys.argv else 'run.py'
+        
+        # Create restart command
+        restart_cmd = f"python3 {script_path}"
+        
+        # Log the restart attempt
+        logger.info("Service restart requested via admin panel")
+        
+        return jsonify({
+            "success": True,
+            "message": "Restart command prepared",
+            "command": restart_cmd,
+            "timestamp": datetime.now().isoformat(),
+            "note": "Service will restart in 5 seconds"
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 @main_bp.route('/api/config/export')

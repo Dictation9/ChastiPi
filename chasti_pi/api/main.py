@@ -85,18 +85,23 @@ def settings():
                          config_info=config_info,
                          permission_info=permission_info)
 
-@main_bp.route('/settings', methods=['POST'])
+@main_bp.route('/update_settings', methods=['POST'])
 def update_settings():
     """Update settings - wearer access only"""
     try:
+        logger.info("Settings update requested")
+        
         # Get form data
         updates = {}
         for key, value in request.form.items():
+            logger.info(f"Form field: {key} = {value}")
             if '.' in key:  # Only process valid setting keys
                 section, setting = key.split('.', 1)
                 if section not in updates:
                     updates[section] = {}
                 updates[section][setting] = value
+        
+        logger.info(f"Processed updates: {updates}")
         
         # Convert boolean values
         for section in updates:
@@ -106,8 +111,12 @@ def update_settings():
                 elif value.isdigit():
                     updates[section][key] = int(value)
         
+        logger.info(f"Converted updates: {updates}")
+        
         # Update settings with wearer permissions
         errors = config_service.update_settings(updates, "wearer")
+        
+        logger.info(f"Update errors: {errors}")
         
         if errors:
             flash(f"Settings updated with errors: {', '.join(errors)}", "error")
@@ -117,6 +126,7 @@ def update_settings():
         return redirect(url_for('main.settings'))
     
     except Exception as e:
+        logger.error(f"Error updating settings: {str(e)}")
         flash(f"Error updating settings: {str(e)}", "error")
         return redirect(url_for('main.settings'))
 

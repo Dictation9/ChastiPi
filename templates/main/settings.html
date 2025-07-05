@@ -168,13 +168,15 @@
             {% endif %}
         </header>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.type }}">
-                    {{ message.text }}
-                </div>
-            {% endfor %}
-        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
         <form method="POST" action="{{ url_for('main.update_settings') }}">
             <!-- Device Settings -->

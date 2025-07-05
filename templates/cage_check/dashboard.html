@@ -219,7 +219,7 @@
             <div class="dashboard-header">
                 <h2>Verification Requests</h2>
                 <div class="action-buttons">
-                    <a href="{{ url_for('cage_check.request_page') }}" class="btn btn-primary">➕ New Check Request</a>
+                    <a href="{{ url_for('cage_check.create_request') }}" class="btn btn-primary">➕ New Check Request</a>
                     <a href="{{ url_for('cage_check.upload_page') }}" class="btn btn-success">📸 Upload Photo</a>
                 </div>
             </div>
@@ -311,7 +311,7 @@
                     <div class="empty-state">
                         <h3>No check requests yet</h3>
                         <p>Create your first cage check request to get started.</p>
-                        <a href="{{ url_for('cage_check.request_page') }}" class="btn btn-primary">Create Request</a>
+                        <a href="{{ url_for('cage_check.create_request') }}" class="btn btn-primary">Create Request</a>
                     </div>
                 `;
                 return;

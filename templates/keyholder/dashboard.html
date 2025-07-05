@@ -156,7 +156,7 @@
                 {% endfor %}
             {% else %}
                 <p>No devices registered.</p>
-                <a href="{{ url_for('keyholder.register_device') }}" class="btn btn-secondary">Register Device</a>
+                <a href="{{ url_for('keyholder.register') }}" class="btn btn-secondary">Register Device</a>
             {% endif %}
         </section>
 
@@ -164,7 +164,7 @@
         <section>
             <h2>⚡ Quick Actions</h2>
             <div class="request-actions">
-                <a href="{{ url_for('keyholder.register_device') }}" class="btn btn-secondary">📱 Register New Device</a>
+                <a href="{{ url_for('keyholder.register') }}" class="btn btn-secondary">📱 Register New Device</a>
                 <a href="{{ url_for('keyholder.configure_email') }}" class="btn btn-secondary">⚙️ Configure Email</a>
                 <a href="{{ url_for('keyholder.email_instructions') }}" class="btn btn-secondary">📖 Email Instructions</a>
                 <a href="{{ url_for('keyholder_config.config_dashboard', keyholder_email=keyholder_email) }}" class="btn btn-secondary">🔧 System Configuration</a>

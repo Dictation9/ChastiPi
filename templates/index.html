@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChastiPi Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔐 ChastiPi Dashboard</h1>
+            <p class="subtitle">Chastity device management & control</p>
+            <nav class="nav-links">
+                <a href="/" class="nav-link active">🔐 Device Dashboard</a>
+                <a href="/system" class="nav-link">🖥️ System Monitor</a>
+            </nav>
+        </header>
+
+        <div class="dashboard">
+            <!-- System Overview Cards -->
+            <div class="card-grid">
+                <div class="card chastity-card">
+                    <div class="card-header">
+                        <h3>Device Status</h3>
+                        <div class="icon">🔐</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="status-indicator">
+                            <span class="status" id="lock-status">--</span>
+                        </div>
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Time Remaining:</span>
+                                <span class="value" id="time-remaining">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Keyholder:</span>
+                                <span class="value" id="keyholder-status">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Emergency:</span>
+                                <span class="value" id="emergency-status">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Key Management</h3>
+                        <div class="icon">🗝️</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Digital Keys:</span>
+                                <span class="value" id="digital-keys">3 Active</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Backup Keys:</span>
+                                <span class="value" id="backup-keys">2 Available</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Emergency Keys:</span>
+                                <span class="value" id="emergency-keys">1 Available</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Access History</h3>
+                        <div class="icon">📋</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Last Access:</span>
+                                <span class="value" id="last-access">2 days ago</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Total Sessions:</span>
+                                <span class="value" id="total-sessions">47</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Average Duration:</span>
+                                <span class="value" id="avg-duration">3.2 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Notifications</h3>
+                        <div class="icon">🔔</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Email Alerts:</span>
+                                <span class="value" id="email-alerts">Enabled</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">SMS Notifications:</span>
+                                <span class="value" id="sms-notifications">Disabled</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Webhook Status:</span>
+                                <span class="value" id="webhook-status">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>Quick Actions</h3>
+                    <div class="icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <div class="action-grid">
+                        <button class="action-btn primary" onclick="requestAccess()">
+                            <span class="action-icon">🔓</span>
+                            <span class="action-text">Request Access</span>
+                        </button>
+                        <button class="action-btn secondary" onclick="emergencyRelease()">
+                            <span class="action-icon">🚨</span>
+                            <span class="action-text">Emergency Release</span>
+                        </button>
+                        <button class="action-btn secondary" onclick="checkDevice()">
+                            <span class="action-icon">📸</span>
+                            <span class="action-text">Device Check</span>
+                        </button>
+                        <button class="action-btn secondary" onclick="viewHistory()">
+                            <span class="action-icon">📋</span>
+                            <span class="action-text">View History</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html> 

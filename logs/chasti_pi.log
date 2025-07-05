@@ -1,8 +1,0 @@
-2025-07-05 20:40:05,722 - chasti_pi.services.cage_check_service - INFO - Completed notification check for pending cage check requests
-2025-07-05 20:40:05,722 - chasti_pi.core.scheduler - INFO - Notification scheduler started (check interval: 5 minutes)
-2025-07-05 20:40:05,723 - chasti_pi.core.app - INFO - Notification scheduler started successfully
-2025-07-05 20:40:05,724 - chasti_pi.core.app - INFO - Loaded plugin: hello_plugin.py
-2025-07-05 20:56:07,220 - chasti_pi.services.cage_check_service - INFO - Completed notification check for pending cage check requests
-2025-07-05 20:56:07,220 - chasti_pi.core.scheduler - INFO - Notification scheduler started (check interval: 5 minutes)
-2025-07-05 20:56:07,220 - chasti_pi.core.app - INFO - Notification scheduler started successfully
-2025-07-05 20:56:07,221 - chasti_pi.core.app - INFO - Loaded plugin: hello_plugin.py

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChastiPi - System Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🖥️ ChastiPi System Monitor</h1>
+            <p class="subtitle">Real-time system monitoring & performance</p>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">🔐 Device Dashboard</a>
+                <a href="/system" class="nav-link active">🖥️ System Monitor</a>
+            </nav>
+        </header>
+
+        <div class="dashboard">
+            <!-- System Overview Cards -->
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>CPU Usage</h3>
+                        <div class="icon">⚡</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="value" id="cpu-percent">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" id="cpu-progress"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Memory Usage</h3>
+                        <div class="icon">💾</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="value" id="memory-percent">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" id="memory-progress"></div>
+                        </div>
+                        <div class="details">
+                            <span id="memory-used">--</span> / <span id="memory-total">--</span> GB
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Disk Usage</h3>
+                        <div class="icon">💿</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="value" id="disk-percent">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress" id="disk-progress"></div>
+                        </div>
+                        <div class="details">
+                            <span id="disk-used">--</span> / <span id="disk-total">--</span> GB
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>System Info</h3>
+                        <div class="icon">🖥️</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="label">Platform:</span>
+                                <span class="value" id="platform">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Hostname:</span>
+                                <span class="value" id="hostname">--</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Last Update:</span>
+                                <span class="value" id="timestamp">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processes Table -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>Top Processes</h3>
+                    <div class="icon">📊</div>
+                </div>
+                <div class="card-content">
+                    <div class="table-container">
+                        <table id="processes-table">
+                            <thead>
+                                <tr>
+                                    <th>PID</th>
+                                    <th>Name</th>
+                                    <th>CPU %</th>
+                                    <th>Memory %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="processes-body">
+                                <tr>
+                                    <td colspan="4" class="loading">Loading processes...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/system.js') }}"></script>
+</body>
+</html> 

@@ -1,68 +1,47 @@
 #!/bin/bash
 
-# ChastiPi Install Script (Legacy)
-# This script is kept for backward compatibility.
-# For Raspberry Pi users, use install_raspberry_pi.sh instead.
+# ChastiPi Dashboard Installation Script
 
-echo "⚠️  This is the legacy install script."
-echo ""
-echo "📖 For better installation experience:"
-echo "   - Raspberry Pi users: Use ./install_raspberry_pi.sh"
-echo "   - macOS users: Use ./mac_version/install_mac.sh"
-echo ""
-echo "🤔 Continue with legacy installation? (y/N)"
-read -r response
-if [[ ! "$response" =~ ^[Yy]$ ]]; then
-    echo "Installation cancelled. Please use the recommended installer."
-    exit 1
-fi
+echo "🔐 Installing ChastiPi Dashboard..."
 
-set -e
-
-# Step 1: Check for Python 3
+# Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
-    echo "Python 3 is required but not found. Please install Python 3."
+    echo "❌ Python 3 is not installed. Please install Python 3 first."
     exit 1
 fi
 
-# Step 2: Create virtual environment
-if [ ! -d "venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv venv
+# Check if pip is installed
+if ! command -v pip3 &> /dev/null; then
+    echo "❌ pip3 is not installed. Please install pip3 first."
+    exit 1
 fi
 
-# Step 3: Activate virtual environment
-source venv/bin/activate
+# Create virtual environment if it doesn't exist
+if [ ! -d ".venv" ]; then
+    echo "📦 Creating virtual environment..."
+    python3 -m venv .venv
+fi
 
-# Step 4: Upgrade pip
+# Activate virtual environment
+echo "🔧 Activating virtual environment..."
+source .venv/bin/activate
+
+# Upgrade pip
+echo "⬆️  Upgrading pip..."
 pip install --upgrade pip
 
-# Step 5: Install dependencies with NumPy compatibility fix
-echo "Installing dependencies with NumPy compatibility..."
-pip install "numpy<2.0"
-pip install opencv-python-headless
+# Install requirements
+echo "📚 Installing dependencies..."
+pip install -r requirements.txt
 
-if [ -f "requirements.txt" ]; then
-    echo "Installing other dependencies from requirements.txt..."
-    pip install -r requirements.txt
-else
-    echo "requirements.txt not found!"
-    exit 1
-fi
+# Make run script executable
+chmod +x run.py
 
-# Step 6: Success message and usage
-cat <<EOF
-
-✅ ChastiPi installation complete!
-
-To activate your virtual environment:
-  source venv/bin/activate
-
-To run the app:
-  python run.py
-
-📖 For better installation experience next time:
-   - Raspberry Pi: Use ./install_raspberry_pi.sh
-   - macOS: Use ./mac_version/install_mac.sh
-
-EOF 
+echo "✅ Installation complete!"
+echo ""
+echo "🚀 To start ChastiPi:"
+echo "   source .venv/bin/activate"
+echo "   python run.py"
+echo ""
+echo "🌐 Access ChastiPi at: http://your-pi-ip:5000"
+echo "" 

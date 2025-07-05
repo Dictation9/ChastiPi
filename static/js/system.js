@@ -1,18 +1,23 @@
-// Dashboard JavaScript for real-time updates
+// System Monitor JavaScript for real-time updates
 
-class Dashboard {
+class SystemMonitor {
     constructor() {
         this.updateInterval = 2000; // Update every 2 seconds
         this.init();
     }
 
     init() {
-        this.updateChastityStatus();
+        this.updateSystemInfo();
+        this.updateProcesses();
         
         // Set up periodic updates
         setInterval(() => {
-            this.updateChastityStatus();
-        }, this.updateInterval * 3); // Update chastity status every 6 seconds
+            this.updateSystemInfo();
+        }, this.updateInterval);
+        
+        setInterval(() => {
+            this.updateProcesses();
+        }, this.updateInterval * 2); // Update processes less frequently
     }
 
     async updateSystemInfo() {
@@ -42,21 +47,6 @@ class Dashboard {
             }
         } catch (error) {
             console.error('Error fetching processes:', error);
-        }
-    }
-
-    async updateChastityStatus() {
-        try {
-            const response = await fetch('/api/chastity-status');
-            const data = await response.json();
-            
-            if (response.ok) {
-                this.updateChastityMetrics(data);
-            } else {
-                console.error('Failed to fetch chastity status:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching chastity status:', error);
         }
     }
 
@@ -155,35 +145,6 @@ class Dashboard {
         }
     }
 
-    updateChastityMetrics(data) {
-        // Update lock status
-        const lockStatus = document.getElementById('lock-status');
-        if (lockStatus) {
-            lockStatus.textContent = data.lock_status;
-            lockStatus.className = `status ${data.lock_status}`;
-        }
-
-        // Update time remaining
-        const timeRemaining = document.getElementById('time-remaining');
-        if (timeRemaining) {
-            timeRemaining.textContent = data.time_remaining;
-        }
-
-        // Update keyholder status
-        const keyholderStatus = document.getElementById('keyholder-status');
-        if (keyholderStatus) {
-            keyholderStatus.textContent = data.keyholder_approved ? 'Approved' : 'Pending';
-            keyholderStatus.style.color = data.keyholder_approved ? '#38a169' : '#ed8936';
-        }
-
-        // Update emergency status
-        const emergencyStatus = document.getElementById('emergency-status');
-        if (emergencyStatus) {
-            emergencyStatus.textContent = data.emergency_available ? 'Available' : 'Unavailable';
-            emergencyStatus.style.color = data.emergency_available ? '#38a169' : '#e53e3e';
-        }
-    }
-
     updateProcessTable(processes) {
         const tbody = document.getElementById('processes-body');
         if (!tbody) return;
@@ -204,9 +165,9 @@ class Dashboard {
     }
 }
 
-// Initialize dashboard when page loads
+// Initialize system monitor when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new Dashboard();
+    new SystemMonitor();
 });
 
 // Add some visual feedback for network status
@@ -216,23 +177,4 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
     console.log('Network connection lost');
-});
-
-// Action button functions
-function requestAccess() {
-    alert('Requesting access... This would integrate with the actual ChastiPi system.');
-}
-
-function emergencyRelease() {
-    if (confirm('Are you sure you want to initiate emergency release? This action cannot be undone.')) {
-        alert('Emergency release initiated. Please contact your keyholder immediately.');
-    }
-}
-
-function checkDevice() {
-    alert('Device check requested. Please take a photo for verification.');
-}
-
-function viewHistory() {
-    alert('Opening access history... This would show detailed logs and statistics.');
-} 
+}); 

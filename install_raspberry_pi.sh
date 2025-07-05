@@ -9,7 +9,7 @@ set -e  # Exit on any error
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
+BLUE='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
@@ -34,7 +34,7 @@ print_header() {
 # Function to check if running on Raspberry Pi
 check_raspberry_pi() {
     if ! grep -q "Raspberry Pi" /proc/cpuinfo 2>/dev/null; then
-        print_warning "This script is designed for Raspberry Pi. Continue anyway? (y/N)"
+        print_warning "This script is designed for Raspberry Pi. Continue anyway? (Y/N)"
         read -r response
         if [[ ! "$response" =~ ^[Yy]$ ]]; then
             print_error "Installation cancelled."
@@ -89,10 +89,6 @@ install_system_dependencies() {
         libhdf5-dev \
         libhdf5-serial-dev \
         libatlas-base-dev \
-        libjasper-dev \
-        libqtcore4 \
-        libqtgui4 \
-        libqt4-test \
         libgstreamer1.0-0 \
         libgstreamer-plugins-base1.0-0 \
         libgtk-3-0 \

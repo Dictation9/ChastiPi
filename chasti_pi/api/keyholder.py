@@ -52,6 +52,19 @@ def dashboard():
     # Get configuration info
     config_info = config_service.get_config_info("keyholder")
     
+    # Get keyholder email
+    keyholder_email = config.get("keyholder.default_keyholder_email", "")
+    
+    # Get pending requests
+    pending_requests = key_storage.get_pending_requests()
+    
+    # Get devices
+    devices = key_storage.get_all_devices()
+    
+    # Get client IP and network status
+    client_ip = request.remote_addr
+    is_remote = False  # This could be enhanced to detect actual remote access
+    
     # Plugin management
     plugins = []
     for plugin_file in PLUGINS_PATH.glob("*.py"):
@@ -67,6 +80,11 @@ def dashboard():
                          recent_activity=recent_activity,
                          stats=stats,
                          config_info=config_info,
+                         keyholder_email=keyholder_email,
+                         pending_requests=pending_requests,
+                         devices=devices,
+                         client_ip=client_ip,
+                         is_remote=is_remote,
                          plugin_states=plugin_states,
                          wearer_settings=wearer_settings)
 

@@ -1,14 +1,4 @@
 {
-  // Add your custom modes below. Each mode is a key with its settings as an object.
-  // Example:
-  "my_custom_mode": {
-    "punishments_enabled": false,         // true or false
-    "cage_check_enabled": true,          // true or false
-    "timed_challenges_enabled": false,   // true or false
-    "random_discipline_enabled": false,  // true or false
-    "strict_mode_features_enabled": false, // true or false
-    "instant_unlock_enabled": true       // true or false
-  },
   "self_hosted_test": {
     "punishments_enabled": false,
     "cage_check_enabled": true,
@@ -57,5 +47,4 @@
     "strict_mode_features_enabled": true,
     "instant_unlock_enabled": false
   }
-  // You can add more custom modes by copying the structure above.
 } 

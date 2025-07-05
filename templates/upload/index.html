@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChastiPi Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📤 ChastiPi Upload</h1>
+            <nav>
+                <a href="{{ url_for('main.index') }}" class="btn">← Back to Dashboard</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="upload-container">
+                <div class="upload-header">
+                    <h2>File Upload</h2>
+                    <p>Upload files for verification or documentation</p>
+                </div>
+
+                <div class="upload-content">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="upload-section">
+                            <label for="fileInput" class="upload-label">
+                                <div class="upload-area">
+                                    <span class="upload-icon">📁</span>
+                                    <p>Click to select files or drag and drop</p>
+                                    <p class="upload-hint">Supported formats: JPG, PNG, GIF, PDF</p>
+                                </div>
+                            </label>
+                            <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png,.gif,.pdf" multiple style="display: none;">
+                        </div>
+
+                        <div class="upload-options">
+                            <div class="form-group">
+                                <label for="uploadType">Upload Type:</label>
+                                <select id="uploadType" name="upload_type" required>
+                                    <option value="">Select upload type</option>
+                                    <option value="verification">Verification</option>
+                                    <option value="documentation">Documentation</option>
+                                    <option value="evidence">Evidence</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description">Description:</label>
+                                <textarea id="description" name="description" rows="3" placeholder="Optional description of the upload"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="upload-actions">
+                            <button type="submit" class="btn btn-primary">Upload Files</button>
+                            <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="upload-status">
+                    <div id="uploadProgress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <p id="progressText">Uploading...</p>
+                    </div>
+                    <div id="uploadResult"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Upload page loaded');
+            
+            const uploadForm = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.querySelector('.upload-area');
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('drag-over');
+            });
+            
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+            });
+            
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('drag-over');
+                fileInput.files = e.dataTransfer.files;
+                updateFileList();
+            });
+            
+            // File selection
+            fileInput.addEventListener('change', updateFileList);
+            
+            // Form submission
+            uploadForm.addEventListener('submit', handleUpload);
+        });
+
+        function updateFileList() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadArea = document.querySelector('.upload-area');
+            
+            if (fileInput.files.length > 0) {
+                let fileList = '<div class="selected-files">';
+                for (let file of fileInput.files) {
+                    fileList += `<p>📄 ${file.name} (${formatFileSize(file.size)})</p>`;
+                }
+                fileList += '</div>';
+                uploadArea.innerHTML = fileList;
+            } else {
+                uploadArea.innerHTML = `
+                    <span class="upload-icon">📁</span>
+                    <p>Click to select files or drag and drop</p>
+                    <p class="upload-hint">Supported formats: JPG, PNG, GIF, PDF</p>
+                `;
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function handleUpload(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+            const uploadType = document.getElementById('uploadType').value;
+            const description = document.getElementById('description').value;
+            
+            if (fileInput.files.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+            
+            if (!uploadType) {
+                alert('Please select an upload type');
+                return;
+            }
+            
+            // Add files to form data
+            for (let file of fileInput.files) {
+                formData.append('files', file);
+            }
+            formData.append('upload_type', uploadType);
+            formData.append('description', description);
+            
+            // Show progress
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progressDiv.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Uploading...';
+            
+            try {
+                const response = await fetch('/upload/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    progressFill.style.width = '100%';
+                    progressText.textContent = 'Upload complete!';
+                    
+                    document.getElementById('uploadResult').innerHTML = `
+                        <div class="success-message">
+                            <h3>✅ Upload Successful</h3>
+                            <p>${result.message}</p>
+                            <p>Files uploaded: ${result.uploaded_files?.length || 0}</p>
+                        </div>
+                    `;
+                    
+                    // Clear form after successful upload
+                    setTimeout(clearForm, 3000);
+                } else {
+                    throw new Error(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressText.textContent = 'Upload failed';
+                
+                document.getElementById('uploadResult').innerHTML = `
+                    <div class="error-message">
+                        <h3>❌ Upload Failed</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('uploadForm').reset();
+            document.getElementById('uploadProgress').style.display = 'none';
+            document.getElementById('uploadResult').innerHTML = '';
+            updateFileList();
+        }
+    </script>
+</body>
+</html> 

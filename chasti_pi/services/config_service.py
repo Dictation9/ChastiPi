@@ -585,4 +585,54 @@ enabled = false"""
                 "keyholder", "cage_check", "punishment", "time_verification",
                 "security", "notifications", "automation"
             ]
-        } 
+        }
+    
+    def get_section(self, section_name: str, user_type: str = "admin") -> Dict[str, Any]:
+        """Get a specific configuration section based on user permissions"""
+        if user_type == "wearer":
+            if section_name in ["security", "keyholder", "punishment", "time_verification"]:
+                return {}
+            elif section_name == "device":
+                return self._get_device_settings_wearer()
+            elif section_name == "network":
+                return self._get_network_settings()
+            elif section_name == "email":
+                return self._get_email_settings()
+            elif section_name == "appearance":
+                return self._get_appearance_settings()
+            else:
+                return {}
+        else:
+            # Keyholder and admin have full access
+            if section_name == "device":
+                return self._get_device_settings()
+            elif section_name == "network":
+                return self._get_network_settings()
+            elif section_name == "email":
+                return self._get_email_settings()
+            elif section_name == "security":
+                return self._get_security_settings()
+            elif section_name == "keyholder":
+                return self._get_keyholder_settings_section()
+            elif section_name == "cage_check":
+                return self._get_cage_check_settings()
+            elif section_name == "punishment":
+                return self._get_punishment_settings()
+            elif section_name == "time_verification":
+                return self._get_time_verification_settings()
+            elif section_name == "upload":
+                return self._get_upload_settings()
+            elif section_name == "calendar":
+                return self._get_calendar_settings()
+            elif section_name == "logging":
+                return self._get_logging_settings()
+            elif section_name == "appearance":
+                return self._get_appearance_settings()
+            elif section_name == "notifications":
+                return self._get_notification_settings()
+            elif section_name == "automation":
+                return self._get_automation_settings()
+            elif section_name == "development":
+                return self._get_development_settings()
+            else:
+                return {} 

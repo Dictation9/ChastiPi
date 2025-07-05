@@ -1044,4 +1044,15 @@ A verification request has expired without completion.
                 logger.info(f"Cleaned up {len(expired_codes)} expired verification codes")
             
         except Exception as e:
-            logger.error(f"Error cleaning up expired codes: {str(e)}") 
+            logger.error(f"Error cleaning up expired codes: {str(e)}")
+    
+    def get_all_check_requests(self) -> List[Dict]:
+        """Get all cage check requests (alias for get_all_checks)"""
+        return self.get_all_checks()
+    
+    def get_recent_checks(self, limit: int = 5) -> List[Dict]:
+        """Get recent cage check requests"""
+        all_checks = list(self.cage_checks.values())
+        # Sort by created_at (newest first)
+        all_checks.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        return all_checks[:limit] 

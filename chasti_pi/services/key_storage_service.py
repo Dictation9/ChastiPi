@@ -409,4 +409,42 @@ class KeyStorageService:
         return {
             "success": True,
             "message": f"Device {device_id} marked as unlocked"
+        }
+    
+    def get_active_requests(self):
+        """Get all active (approved) key release requests"""
+        active = []
+        for request_id, request in self.key_requests.items():
+            if request["status"] == "approved":
+                # Check if release hasn't expired
+                if "release_expires_at" in request:
+                    expires_at = datetime.fromisoformat(request["release_expires_at"])
+                    if expires_at > datetime.now():
+                        active.append(request)
+        return active
+    
+    def get_all_requests(self):
+        """Get all key release requests"""
+        return list(self.key_requests.values())
+    
+    def get_recent_activity(self, limit=10):
+        """Get recent activity (all requests sorted by date)"""
+        all_requests = list(self.key_requests.values())
+        # Sort by requested_at (newest first)
+        all_requests.sort(key=lambda x: x.get("requested_at", ""), reverse=True)
+        return all_requests[:limit]
+    
+    def get_statistics(self):
+        """Get key storage statistics"""
+        total_requests = len(self.key_requests)
+        pending_requests = len([r for r in self.key_requests.values() if r["status"] == "pending"])
+        approved_requests = len([r for r in self.key_requests.values() if r["status"] == "approved"])
+        denied_requests = len([r for r in self.key_requests.values() if r["status"] == "denied"])
+        
+        return {
+            "total_requests": total_requests,
+            "pending_requests": pending_requests,
+            "approved_requests": approved_requests,
+            "denied_requests": denied_requests,
+            "total_devices": len(self.devices)
         } 

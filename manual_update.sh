@@ -173,7 +173,9 @@ elif systemctl is-active --quiet chastipi; then
 else
     print_status "ChastiPi is not currently running."
 fi
-    
+
+# If ChastiPi is running, offer to restart it
+if [[ -n "$RUNNING_METHOD" ]]; then
     # Ask user if they want to auto-restart
     echo ""
     read -p "Do you want to automatically restart ChastiPi to apply updates? (y/N): " -r response

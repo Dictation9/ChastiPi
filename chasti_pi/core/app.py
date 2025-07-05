@@ -51,8 +51,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(main_bp, url_prefix='/')
     app.register_blueprint(keyholder_bp, url_prefix='/keyholder')
-    if app.config['CHASTITY_MODE'].is_feature_enabled('punishments'):
-        app.register_blueprint(punishment_bp, url_prefix='/punishment')
+    app.register_blueprint(punishment_bp, url_prefix='/punishment')
     app.register_blueprint(upload_bp, url_prefix='/upload')
     app.register_blueprint(webhook_bp, url_prefix='/webhook')
     app.register_blueprint(time_verification_bp, url_prefix='/time-verification')

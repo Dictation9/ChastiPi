@@ -23,7 +23,12 @@ def config_dashboard():
     keyholder_email = request.args.get('keyholder_email')
     
     if not keyholder_email:
-        return render_template('keyholder/config_dashboard.html', error="Keyholder email required")
+        return render_template('keyholder/config_dashboard.html', 
+                             error="Keyholder email required",
+                             config_info={},
+                             templates=[],
+                             stats={},
+                             keyholder_email="")
     
     # Get current configuration
     config = config_service.get_keyholder_config(keyholder_email)

@@ -37,7 +37,7 @@ A macOS-optimized version of ChastiPi with native system integration, notificati
 ### Step 2: Clone and Install
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 
 # Run the Mac installation script

@@ -20,7 +20,7 @@ class UpdateService:
     
     def __init__(self):
         self.current_version = "2.0.0"
-        self.update_check_url = "https://api.github.com/repos/your-repo/chasti-pi/releases/latest"
+        self.update_check_url = "https://api.github.com/repos/Dictation9/ChastiPi/releases/latest"
         self.last_check_file = Path("data/last_update_check.json")
         self.update_settings = self._get_update_settings()
     
@@ -92,7 +92,7 @@ class UpdateService:
                 "latest_version": latest_version,
                 "update_available": is_newer,
                 "release_notes": "Bug fixes and performance improvements",
-                "download_url": "https://github.com/your-repo/chasti-pi/releases/latest",
+                "download_url": "https://github.com/Dictation9/ChastiPi/releases/latest",
                 "published_at": datetime.now().isoformat(),
                 "last_check": datetime.now().isoformat(),
                 "error": None

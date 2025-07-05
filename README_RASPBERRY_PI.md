@@ -11,7 +11,7 @@ This guide provides easy installation instructions for running ChastiPi on Raspb
 ### Option 1: Automated Installation
 ```bash
 # Download and run the automated installer
-wget https://raw.githubusercontent.com/your-repo/ChastiPi/main/install_raspberry_pi.sh
+wget https://raw.githubusercontent.com/Dictation9/ChastiPi/main/install_raspberry_pi.sh
 chmod +x install_raspberry_pi.sh
 ./install_raspberry_pi.sh
 ```
@@ -19,7 +19,7 @@ chmod +x install_raspberry_pi.sh
 ### Option 2: Manual Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 
 # Run the installer

@@ -69,7 +69,7 @@ A comprehensive system for managing chastity devices, punishments, and keyholder
 **For the easiest installation experience:**
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 
 # Run the automated installer
@@ -79,7 +79,7 @@ cd ChastiPi
 **For manual installation:**
 ```bash
 # Clone and install manually
-git clone https://github.com/yourusername/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 bash install.sh
 source venv/bin/activate
@@ -92,7 +92,7 @@ python run.py
 **For native Mac app:**
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 
 # Build Mac app bundle
@@ -106,7 +106,7 @@ open /Applications/ChastiPi.app
 **For command line installation:**
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/ChastiPi.git
+git clone https://github.com/Dictation9/ChastiPi.git
 cd ChastiPi
 ./mac_version/install_mac.sh
 source venv/bin/activate

@@ -16,6 +16,7 @@ Welcome to the ChastiPi documentation! This directory contains detailed guides f
 - **[Email Configuration](email_configuration_system.md)** - Email-based management
 - **[Keyholder Configuration](keyholder_configuration_system.md)** - Settings and permissions
 - **[Time Verification](time_verification_security.md)** - Security and time sync
+- **[Modes System](modes_system.md)** - Built-in and custom modes configuration
 
 #### Advanced Features
 - **[Remote Access Setup](remote_access_setup.md)** - Network configuration
@@ -26,6 +27,10 @@ Welcome to the ChastiPi documentation! This directory contains detailed guides f
 #### Reference Materials
 - **[Time Unit Examples](time_unit_examples.md)** - Time format examples
 - **[Setting Permissions System](setting_permissions_system.md)** - Permission management
+
+#### Detailed Documentation
+- **[Features Overview](features_overview.md)** - Comprehensive feature explanations
+- **[API Reference](api_reference.md)** - Complete API documentation and examples
 
 ## 🎯 Getting Started
 
@@ -70,6 +75,7 @@ docs/
 ├── email_configuration_system.md # Email-based management
 ├── keyholder_configuration_system.md # Settings and permissions
 ├── time_verification_security.md # Security and time sync
+├── modes_system.md              # Built-in and custom modes
 ├── remote_access_setup.md       # Network configuration
 ├── cage_check_notifications.md  # Notification system
 ├── email_first_approach.md      # Email-only workflow

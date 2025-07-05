@@ -1,88 +1,59 @@
 # ChastiPi - Digital Keyholder & Punishment Management System
 
-A comprehensive Raspberry Pi-based system for managing chastity devices, punishments, and keyholder relationships with advanced automation and security features.
+A comprehensive system for managing chastity devices, punishments, and keyholder relationships with advanced automation and security features.
 
 ## 🌟 Features
 
 ### 🔐 Digital Keyholder System
-- **Encrypted Key Storage** - Securely store device key codes
-- **Email-Based Approval** - Approve/deny requests via email or web interface
-- **Temporary Access Tokens** - Time-limited key access with automatic expiration
-- **Emergency Release** - Quick emergency access procedures
-- **Request History** - Complete audit trail of all key requests
-- **Remote Management** - Manage from anywhere via email or web
-- **Timer Control** - Extend, reduce, or modify approved durations
+- Encrypted key storage and email-based approval
+- Temporary access tokens with automatic expiration
+- Emergency release procedures and request history
+- Remote management via email or web interface
 
 ### 📋 Punishment Management
-- **Unique QR Code Generation** - Generate unique verification codes for each punishment
-- **PDF Punishment Sheets** - Professional punishment documentation
-- **Photo Verification System** - Upload photos to verify completion
-- **OCR Number Recognition** - Read handwritten numbers from photos
-- **Customizable Tasks** - Create personalized punishment requirements
-- **Time Tracking** - Monitor completion times and deadlines
-- **Verification Hashing** - Secure verification with cryptographic hashes
+- Unique QR code generation and PDF documentation
+- Photo verification system with OCR recognition
+- Customizable tasks and time tracking
+- Secure verification with cryptographic hashes
 
 ### 🔒 Cage Check System
-- **Verification Requests** - Keyholders can request cage/lock verification
-- **Random Code Generation** - Unique verification codes for each check
-- **Photo Upload & Verification** - Upload photos with verification codes
-- **OCR Code Reading** - Automatic code recognition from photos
-- **Email Notifications** - Automatic reminders and status updates
-- **Expiry Management** - Automatic expiration and escalation
-- **Smart Notifications** - Intelligent reminder scheduling based on response patterns
-- **Verification History** - Complete audit trail of all verification attempts
+- Photo/video verification with random codes
+- OCR code reading and email notifications
+- Smart notifications and expiry management
+- Complete audit trail of all verification attempts
 
 ### 📧 Email Integration
-- **Email-Based Management** - Control system entirely through email
-- **Automatic Notifications** - Real-time email alerts for all events
-- **Email Reply Processing** - Process keyholder responses via email
-- **Configuration via Email** - Manage settings through email attachments
-- **Webhook Support** - Integrate with email services and automation
-- **Attachment Processing** - Handle configuration files and photos via email
-- **Command Parsing** - Intelligent parsing of email commands and parameters
+- Email-based management and automatic notifications
+- Configuration via email attachments
+- Webhook support and intelligent command parsing
 
 ### ⚙️ Configuration Management
-- **Keyholder Configuration System** - Complete settings customization
-- **Email-Based Configuration** - Edit settings via email and file attachments
-- **Configuration Templates** - Pre-built settings for common scenarios
-- **Import/Export** - Backup and restore configurations
-- **Real-Time Updates** - Settings applied immediately
-- **Audit Trail** - Track all configuration changes
-- **Validation** - Automatic validation of configuration changes
-- **Backup Management** - Automatic configuration backups
+- Complete settings customization and templates
+- Import/export with real-time updates
+- Audit trail and automatic validation
 
 ### 📅 Calendar & Scheduling
-- **Event Management** - Schedule punishments, checks, and releases
-- **Progress Tracking** - Monitor completion and milestones
-- **Reminder System** - Automatic notifications for upcoming events
-- **Statistics & Reports** - Detailed activity reports and analytics
-- **Integration** - Sync with external calendar systems
+- Event management and progress tracking
+- Reminder system and detailed analytics
+- Integration with external calendar systems
 
 ### 🔍 Time Verification
-- **NTP Time Sync** - Verify system time against trusted servers
-- **Drift Detection** - Monitor for time manipulation attempts
-- **Automatic Correction** - Sync time automatically when drift detected
-- **Security Logging** - Track all time verification attempts
-- **Multiple NTP Servers** - Redundant time verification sources
-- **Alert System** - Notify keyholders of time manipulation attempts
+- NTP time sync with drift detection
+- Automatic correction and security logging
+- Multiple NTP servers and alert system
 
 ### 📸 Photo Upload & Verification
-- **QR Code Scanning** - Automatic QR code detection from photos
-- **OCR Text Recognition** - Read handwritten numbers and text
-- **Multiple Format Support** - JPG, PNG, GIF, BMP support
-- **Verification Dashboard** - Review and approve uploaded photos
-- **Accuracy Thresholds** - Configurable verification accuracy
-- **Image Processing** - Automatic image enhancement for better OCR
-- **Batch Processing** - Handle multiple photos in single upload
+- QR code scanning and OCR text recognition
+- Multiple format support (JPG, PNG, GIF, BMP, MP4, MOV, AVI, WMV, FLV, WEBM)
+- Video processing with frame extraction
+- Verification dashboard with accuracy thresholds
 
 ### 🛡️ Security Features
-- **Encrypted Storage** - All sensitive data encrypted at rest
-- **Email Verification** - Verify keyholder identity via email
-- **Session Management** - Secure session handling and timeouts
-- **Access Control** - Role-based access control
-- **Audit Logging** - Comprehensive security logging
-- **Rate Limiting** - Prevent abuse and brute force attacks
-- **Input Validation** - Sanitize all user inputs
+- Encrypted storage and email verification
+- Session management and access control
+- Comprehensive audit logging and rate limiting
+
+📖 **For detailed feature explanations, see the [Documentation Index](docs/README.md)**
 
 ## 🚀 Quick Start
 
@@ -150,18 +121,17 @@ python run.py
 
 ## 🧩 Modes System
 
-ChastiPi supports multiple operation modes, each with different features and restrictions. You can also define your own custom modes!
+ChastiPi supports multiple operation modes with different features and restrictions. Choose from built-in modes or create custom ones.
 
 ### Built-in Modes
-- **self_hosted_test**: For testing. Instant unlocks, no punishments.
-- **gentle**: No punishments, gentle experience.
-- **timed_challenge**: Focus on timed challenges.
-- **random_discipline**: Random punishments or tasks.
-- **strict**: Stricter rules and consequences.
-- **extreme**: All strict features, maximum restrictions.
+- **gentle**: No punishments, gentle experience
+- **timed_challenge**: Focus on timed challenges
+- **random_discipline**: Random punishments or tasks
+- **strict**: Stricter rules and consequences
+- **extreme**: All strict features, maximum restrictions
 
-### Selecting a Mode
-Set the mode in your `config.json`:
+### Quick Setup
+Set your mode in `config.json`:
 ```json
 {
   "system": {
@@ -169,23 +139,8 @@ Set the mode in your `config.json`:
   }
 }
 ```
-Replace `gentle` with any mode name you want to use.
 
-### Custom Modes
-You can define your own modes in `custom_modes.json`:
-```json
-{
-  "my_custom_mode": {
-    "punishments_enabled": false,
-    "cage_check_enabled": true,
-    "timed_challenges_enabled": false,
-    "random_discipline_enabled": false,
-    "strict_mode_features_enabled": false,
-    "instant_unlock_enabled": true
-  }
-}
-```
-Then set `chastity_mode` to `my_custom_mode` in `config.json`.
+📖 **For detailed mode explanations and custom mode creation, see [Modes System Guide](docs/modes_system.md)**
 
 ## 🔌 Plugin System
 
@@ -259,6 +214,8 @@ Keyholders can manage the system via email:
 - **Months**: `extend 2 months`, `reduce 1 month`
 - **Years**: `extend 1 year`, `reduce 6 months`
 
+📖 **For detailed email setup, configuration, and troubleshooting, see [Email Configuration Guide](docs/email_configuration_system.md)**
+
 ## 🔧 Configuration Management
 
 ### Web Interface
@@ -297,188 +254,57 @@ Keyholders can manage the system via email:
 - **Automation Rules** - Scheduled actions and auto-responses
 - **Reporting Configuration** - Report types and delivery
 
-## 📱 Usage Examples
+## 📱 Quick Examples
 
 ### Keyholder Management
 ```bash
-# Register a new device
+# Register device and request access
 POST /keyholder/register
-{
-  "device_id": "cage_001",
-  "device_name": "My Chastity Cage",
-  "keyholder_email": "keyholder@example.com",
-  "key_codes": {"lock1": "1234", "lock2": "5678"}
-}
-
-# Request key release
 POST /keyholder/request
-{
-  "device_id": "cage_001",
-  "reason": "Medical appointment",
-  "duration_hours": 2
-}
 ```
 
 ### Cage Check System
 ```bash
-# Create cage check request
+# Create verification request and upload photo
 POST /cage-check/request
-{
-  "keyholder_email": "keyholder@example.com",
-  "wearer_email": "wearer@example.com",
-  "device_name": "Chastity Cage",
-  "check_type": "cage",
-  "reason": "Random verification"
-}
-
-# Upload verification photo
 POST /cage-check/upload
-{
-  "request_id": "CHECK_20231201_143022_1234",
-  "photo": "base64_encoded_image"
-}
-
-# Get check status
-GET /cage-check/status/CHECK_20231201_143022_1234
-
-# List all checks
-GET /cage-check/list?keyholder_email=keyholder@example.com
 ```
 
-### Email Configuration
+### Email Commands
 ```bash
-# Test email webhook
-POST /webhook/email/test
-{
-  "from": {"email": "keyholder@example.com"},
-  "subject": "Settings Request",
-  "text": "settings"
-}
-
-# Test configuration import
-POST /webhook/email/config-import
-{
-  "from": {"email": "keyholder@example.com"},
-  "attachments": [{"filename": "config.txt", "content": "# Configuration..."}]
-}
+# Keyholder email commands
+settings    # Get configuration
+approve     # Approve pending requests
+extend 2h   # Extend request duration
+check       # Request verification
 ```
 
-### Punishment Management
-```bash
-# Generate new punishment
-POST /punishment/generate
-{
-  "task_description": "Write lines 100 times",
-  "verification_required": true,
-  "time_limit_hours": 24
-}
+📖 **For detailed API documentation and examples, see the [Documentation Index](docs/README.md)**
 
-# Upload punishment completion
-POST /punishment/upload
-{
-  "punishment_id": "PUN_20231201_143022_5678",
-  "photo": "base64_encoded_image",
-  "completion_notes": "Task completed as requested"
-}
+## 🔒 Security & Monitoring
 
-# Get punishment statistics
-GET /punishment/stats?period=month
-```
+### Security Features
+- Local network access by default
+- Encrypted storage and email verification
+- Comprehensive audit logging
+- Rate limiting and access control
 
-### Configuration Management
-```bash
-# Export configuration
-GET /keyholder/config/export
+### Monitoring
+- Status dashboard and log files
+- Email notifications for system events
+- Regular backups and configuration exports
+- Performance monitoring and updates
 
-# Import configuration
-POST /keyholder/config/import
-{
-  "config_data": "# Configuration file content...",
-  "backup_existing": true
-}
-
-# Get configuration template
-GET /keyholder/config/template?type=basic
-```
-
-### Time Verification
-```bash
-# Check system time
-GET /time-verification/status
-
-# Force time sync
-POST /time-verification/sync
-
-# Get time verification history
-GET /time-verification/history?days=7
-```
-
-## 🔒 Security Considerations
-
-### Network Security
-- **Local Network Only** - Default configuration for local access
-- **Port Forwarding** - Configure for remote access if needed
-- **VPN Setup** - Recommended for secure remote access
-- **HTTPS** - Use reverse proxy for encrypted connections
-
-### Email Security
-- **App Passwords** - Use app-specific passwords for email
-- **Webhook Verification** - Verify webhook authenticity
-- **Email Encryption** - Consider PGP for sensitive communications
-- **Access Logging** - Monitor all email-based actions
-
-### Data Protection
-- **Encrypted Storage** - All sensitive data encrypted
-- **Regular Backups** - Backup configurations and data
-- **Access Control** - Limit access to authorized users
-- **Audit Trail** - Log all system activities
-
-## 📊 Monitoring & Maintenance
-
-### System Health
-- **Status Dashboard** - Monitor system health and status
-- **Log Files** - Review logs in `logs/` directory
-- **Email Notifications** - Get alerts for system events
-- **Performance Monitoring** - Track system performance
-
-### Backup & Recovery
-- **Configuration Backup** - Export configurations regularly
-- **Data Backup** - Backup `data/` directory
-- **System Backup** - Full system image backup
-- **Recovery Procedures** - Document recovery steps
-
-### Updates & Maintenance
-- **Regular Updates** - Keep system and dependencies updated
-- **Security Patches** - Apply security updates promptly
-- **Configuration Review** - Regular configuration audits
-- **Performance Optimization** - Monitor and optimize performance
+📖 **For detailed security and monitoring information, see the [Documentation Index](docs/README.md)**
 
 ## 🤝 Contributing
 
-### Development Setup
 1. **Fork the repository**
 2. **Create feature branch**
-3. **Make changes**
-4. **Add tests**
-5. **Submit pull request**
+3. **Make changes and add tests**
+4. **Submit pull request**
 
-### Code Style
-- Follow PEP 8 guidelines
-- Add type hints
-- Include docstrings
-- Write unit tests
-
-### Testing
-```bash
-# Run tests
-python -m pytest tests/
-
-# Run linting
-flake8 chasti_pi/
-
-# Run type checking
-mypy chasti_pi/
-```
+📖 **For development setup and guidelines, see the [Documentation Index](docs/README.md)**
 
 ## 📄 License
 
@@ -491,48 +317,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **[🍓 Raspberry Pi Installation](README_RASPBERRY_PI.md)** - Complete Pi setup instructions
 - **[🍎 Mac Installation](mac_version/README.md)** - macOS setup and app building
 
-#### System Components
-- **[Cage Check System](docs/cage_check_system.md)** - Photo/video verification system
-- **[Email Configuration](docs/email_configuration_system.md)** - Email-based management
-- **[Keyholder Configuration](docs/keyholder_configuration_system.md)** - Settings and permissions
-- **[Time Verification](docs/time_verification_security.md)** - Security and time sync
-- **[Remote Access Setup](docs/remote_access_setup.md)** - Network configuration
-
 ### Troubleshooting
 - **Installation Issues:** Check platform-specific installation guides
-  - [Raspberry Pi Troubleshooting](README_RASPBERRY_PI.md#🛠️-troubleshooting)
-  - [Mac Installation Issues](mac_version/README.md#🐛-common-issues)
 - **NumPy Compatibility:** Use `./fix_numpy_issue.sh` (Raspberry Pi)
 - **General Issues:** Check [Issues](../../issues) for known problems
 - **System Issues:** Review logs in `logs/` directory
-- **Email Issues:** Test email configuration with `/webhook/test`
-- **Webhook Issues:** Verify webhook setup with `/webhook/status`
 
 ### Getting Help
 - Create an issue for bugs or feature requests
 - Check documentation for setup guides
 - Review configuration examples
-- Test with sample data first
-
-## 🔮 Roadmap
-
-### Planned Features
-- [ ] Mobile app for notifications
-- [ ] Advanced analytics dashboard
-- [ ] Integration with smart locks
-- [ ] Voice command support
-- [ ] Machine learning for verification
-- [ ] Multi-user support
-- [ ] Advanced scheduling
-- [ ] API rate limiting
-
-### Future Enhancements
-- [ ] Blockchain integration
-- [ ] Advanced encryption
-- [ ] Cloud backup
-- [ ] Multi-language support
-- [ ] Accessibility improvements
-- [ ] Performance optimizations
 
 ---
 

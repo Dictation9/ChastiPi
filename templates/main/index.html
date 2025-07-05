@@ -207,6 +207,7 @@
             </div>
 
             <!-- Punishment System -->
+            {% if g.chastity_mode.is_feature_enabled('punishments') %}
             <div class="feature-card">
                 <div class="feature-icon">📋</div>
                 <div class="feature-title">Punishment Generator</div>
@@ -216,6 +217,7 @@
                 </div>
                 <a href="{{ url_for('punishment.generate_punishment') }}" class="btn btn-danger">Generate Punishment</a>
             </div>
+            {% endif %}
 
             <!-- Photo Upload & Verification -->
             <div class="feature-card">
@@ -251,12 +253,14 @@
                     <a href="{{ url_for('keyholder.register') }}" class="btn">Request Access</a>
                 </div>
                 
+                {% if g.chastity_mode.is_feature_enabled('punishments') %}
                 <div class="action-item">
                     <div class="action-icon">📝</div>
                     <h3>Create Punishment</h3>
                     <p>Generate a new punishment sheet</p>
                     <a href="{{ url_for('punishment.generate_punishment') }}" class="btn">Create New</a>
                 </div>
+                {% endif %}
                 
                 <div class="action-item">
                     <div class="action-icon">📱</div>

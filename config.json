@@ -150,6 +150,10 @@
         "backup_before_update": true,
         "health_check_interval_minutes": 30
     },
+    "system": {
+        "chastity_mode": "strict",
+        "setup_complete": true
+    },
     "development": {
         "debug": false,
         "test_mode": false,

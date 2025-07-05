@@ -433,8 +433,10 @@ python3 run.py
 EOF
     
     chmod +x start_chastipi.sh
+    chmod +x manual_update.sh
     
     print_status "Startup script created: start_chastipi.sh"
+    print_status "Manual update script made executable: manual_update.sh"
 }
 
 # Function to create systemd service

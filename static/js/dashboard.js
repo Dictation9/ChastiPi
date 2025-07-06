@@ -238,11 +238,10 @@ function viewHistory() {
 }
 
 // Update functionality
-async function checkForUpdates() {
+async function checkForUpdates(btn) {
+    let updateBtn = btn;
+    const originalText = updateBtn.innerHTML;
     try {
-        // Show loading state
-        const updateBtn = event.target.closest('.action-btn');
-        const originalText = updateBtn.innerHTML;
         updateBtn.innerHTML = '<span class="action-icon">⏳</span><span class="action-text">Checking...</span>';
         updateBtn.disabled = true;
         
@@ -261,8 +260,6 @@ async function checkForUpdates() {
     } catch (error) {
         showNotification('Error checking for updates: ' + error.message, 'error');
     } finally {
-        // Restore button state
-        const updateBtn = event.target.closest('.action-btn');
         updateBtn.innerHTML = originalText;
         updateBtn.disabled = false;
     }

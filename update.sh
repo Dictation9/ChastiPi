@@ -351,6 +351,36 @@ update_system() {
     fi
 }
 
+# Function to stop the application
+stop_app() {
+    print_status "Stopping ChastiPi application..."
+    
+    # Find and kill existing process
+    PID=$(pgrep -f "python.*app.py" || pgrep -f "python.*run.py" || echo "")
+    if [ ! -z "$PID" ]; then
+        print_status "Stopping ChastiPi process (PID: $PID)..."
+        kill $PID
+        sleep 2
+        
+        # Check if process was killed
+        if kill -0 $PID 2>/dev/null; then
+            print_warning "Process still running, forcing termination..."
+            kill -9 $PID
+            sleep 1
+        fi
+        
+        # Verify process is stopped
+        if ! kill -0 $PID 2>/dev/null; then
+            print_status "ChastiPi stopped successfully!"
+        else
+            print_error "Failed to stop ChastiPi process"
+            return 1
+        fi
+    else
+        print_status "ChastiPi is not currently running"
+    fi
+}
+
 # Function to restart the application
 restart_app() {
     print_status "Restarting ChastiPi application..."
@@ -482,12 +512,13 @@ show_menu() {
     echo "3) Update system packages (Raspberry Pi only)"
     echo "4) Full update (dependencies + code + system)"
     echo "5) Restart application"
-    echo "6) Show current status"
-    echo "7) Setup autostart (start on boot)"
-    echo "8) Remove autostart"
-    echo "9) Exit"
+    echo "6) Stop application"
+    echo "7) Show current status"
+    echo "8) Setup autostart (start on boot)"
+    echo "9) Remove autostart"
+    echo "10) Exit"
     echo ""
-    read -p "Select an option (1-9): " choice
+    read -p "Select an option (1-10): " choice
 }
 
 # Function to show current status
@@ -558,6 +589,9 @@ main() {
     elif [ "$1" = "--restart" ]; then
         restart_app
         exit 0
+    elif [ "$1" = "--stop" ]; then
+        stop_app
+        exit 0
     elif [ "$1" = "--status" ]; then
         show_status
         exit 0
@@ -576,6 +610,7 @@ main() {
         echo "  --system            Update system packages (Raspberry Pi only)"
         echo "  --full              Perform full update (dependencies + code + system)"
         echo "  --restart           Restart the ChastiPi application"
+        echo "  --stop              Stop the ChastiPi application"
         echo "  --status            Show current status"
         echo "  --autostart         Setup autostart (start on boot)"
         echo "  --remove-autostart  Remove autostart configuration"
@@ -612,20 +647,23 @@ main() {
                 restart_app
                 ;;
             6)
-                show_status
+                stop_app
                 ;;
             7)
-                setup_autostart
+                show_status
                 ;;
             8)
-                remove_autostart
+                setup_autostart
                 ;;
             9)
+                remove_autostart
+                ;;
+            10)
                 print_status "Exiting..."
                 exit 0
                 ;;
             *)
-                print_error "Invalid option. Please select 1-9."
+                print_error "Invalid option. Please select 1-10."
                 ;;
         esac
         

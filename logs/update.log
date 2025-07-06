@@ -14,3 +14,13 @@
 [INFO] Generating updated requirements.txt...
 [INFO] Changes in dependencies:
 [INFO] Dependencies updated successfully!
+
+--- 2025-07-06 17:42:51 [update.sh invocation] ./update.sh --help ---
+
+--- 2025-07-06 17:42:59 [update.sh invocation] ./update.sh --stop ---
+[INFO] Stopping ChastiPi application...
+[INFO] ChastiPi is not currently running
+
+--- 2025-07-06 17:43:12 [update.sh invocation] ./update.sh  ---
+[INFO] Stopping ChastiPi application...
+[INFO] ChastiPi is not currently running

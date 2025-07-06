@@ -24,3 +24,8 @@
 --- 2025-07-06 17:43:12 [update.sh invocation] ./update.sh  ---
 [INFO] Stopping ChastiPi application...
 [INFO] ChastiPi is not currently running
+
+--- 2025-07-06 19:50:52 [update.sh invocation] ./update.sh --help ---
+
+--- 2025-07-06 19:51:05 [update.sh invocation] ./update.sh  ---
+[INFO] Exiting...

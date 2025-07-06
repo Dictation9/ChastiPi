@@ -503,6 +503,90 @@ remove_autostart() {
     fi
 }
 
+# Function to perform hard reset (complete fresh install)
+hard_reset() {
+    print_warning "🚨 HARD RESET WARNING 🚨"
+    echo ""
+    echo "This will completely delete everything and perform a fresh install:"
+    echo "  - All current files will be deleted"
+    echo "  - Virtual environment will be removed"
+    echo "  - All backups will be deleted"
+    echo "  - Application will be stopped"
+    echo "  - Fresh code will be downloaded from git"
+    echo "  - New virtual environment will be created"
+    echo "  - Dependencies will be reinstalled"
+    echo ""
+    echo -e "${RED}This action cannot be undone!${NC}"
+    echo ""
+    
+    read -p "Are you absolutely sure you want to proceed? (type 'YES' to confirm): " confirm
+    
+    if [ "$confirm" != "YES" ]; then
+        print_status "Hard reset cancelled."
+        return
+    fi
+    
+    print_status "Starting hard reset..."
+    
+    # Stop the application first
+    stop_app
+    
+    # Remove autostart if configured
+    remove_autostart 2>/dev/null || true
+    
+    # Get current directory
+    CURRENT_DIR=$(pwd)
+    PARENT_DIR=$(dirname "$CURRENT_DIR")
+    PROJECT_NAME=$(basename "$CURRENT_DIR")
+    
+    # Create a temporary backup of the update script itself
+    cp "$0" /tmp/chastipi_update_backup.sh
+    
+    print_status "Deleting all current files..."
+    
+    # Move to parent directory
+    cd "$PARENT_DIR"
+    
+    # Remove the entire project directory
+    rm -rf "$PROJECT_NAME"
+    
+    print_status "Downloading fresh code from git..."
+    
+    # Clone fresh code from git
+    if git clone https://github.com/Dictation9/ChastiPi.git "$PROJECT_NAME" 2>/dev/null; then
+        cd "$PROJECT_NAME"
+        
+        # Restore the update script
+        cp /tmp/chastipi_update_backup.sh "$0"
+        chmod +x "$0"
+        
+        print_status "Creating new virtual environment..."
+        python3 -m venv .venv
+        
+        print_status "Installing dependencies..."
+        source .venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        
+        print_status "Setting up fresh installation..."
+        
+        # Create necessary directories
+        mkdir -p logs
+        mkdir -p backups
+        mkdir -p flask_session
+        
+        # Set up initial configuration
+        print_status "Hard reset completed successfully!"
+        print_status "Fresh installation is ready."
+        print_status "You can now run: python app.py"
+        
+    else
+        print_error "Failed to download fresh code from git."
+        print_error "Please manually download the code and reinstall."
+        exit 1
+    fi
+}
+
 # Function to show update menu
 show_menu() {
     echo ""
@@ -516,9 +600,10 @@ show_menu() {
     echo "7) Show current status"
     echo "8) Setup autostart (start on boot)"
     echo "9) Remove autostart"
-    echo "10) Exit"
+    echo "10) 🚨 HARD RESET (delete everything & fresh install)"
+    echo "11) Exit"
     echo ""
-    read -p "Select an option (1-10): " choice
+    read -p "Select an option (1-11): " choice
 }
 
 # Function to show current status
@@ -601,6 +686,9 @@ main() {
     elif [ "$1" = "--remove-autostart" ]; then
         remove_autostart
         exit 0
+    elif [ "$1" = "--hard-reset" ]; then
+        hard_reset
+        exit 0
     elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
         echo "Usage: $0 [OPTION]"
         echo ""
@@ -614,6 +702,7 @@ main() {
         echo "  --status            Show current status"
         echo "  --autostart         Setup autostart (start on boot)"
         echo "  --remove-autostart  Remove autostart configuration"
+        echo "  --hard-reset        🚨 Delete everything and perform fresh install"
         echo "  --help              Show this help message"
         echo ""
         echo "If no option is provided, an interactive menu will be shown."
@@ -659,11 +748,14 @@ main() {
                 remove_autostart
                 ;;
             10)
+                hard_reset
+                ;;
+            11)
                 print_status "Exiting..."
                 exit 0
                 ;;
             *)
-                print_error "Invalid option. Please select 1-10."
+                print_error "Invalid option. Please select 1-11."
                 ;;
         esac
         

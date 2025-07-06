@@ -1,10 +1,14 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file, Response
 from flask_session import Session
 import os
 import psutil
 import platform
 from datetime import datetime
 from functools import wraps
+import logging
+from logging.handlers import RotatingFileHandler
+import smtplib
+from email.message import EmailMessage
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
@@ -18,6 +22,21 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 # Keyholder credentials (in production, use proper authentication)
 KEYHOLDER_USERNAME = os.environ.get('KEYHOLDER_USERNAME', 'keyholder')
 KEYHOLDER_PASSWORD = os.environ.get('KEYHOLDER_PASSWORD', 'secure123')
+
+# Ensure logs directory exists
+os.makedirs('logs', exist_ok=True)
+
+# Set up logging
+log_formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s: %(message)s')
+log_file = 'logs/app.log'
+file_handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=5)
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.INFO)
+
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+
+app.logger.info('ChastiPi app started')
 
 def login_required(f):
     @wraps(f)
@@ -80,6 +99,7 @@ def chastity_status():
             'emergency_available': True
         })
     except Exception as e:
+        app.logger.error(f'/api/chastity-status error: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/system-info')
@@ -445,6 +465,77 @@ def keyholder_notifications():
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/logs/<logtype>')
+@login_required
+def view_log(logtype):
+    log_map = {
+        'app': 'logs/app.log',
+        'backup': 'logs/backup.log',
+        'update': 'logs/update.log',
+    }
+    log_file = log_map.get(logtype)
+    if not log_file or not os.path.exists(log_file):
+        return Response('Log not found', status=404)
+    if request.args.get('download') == '1':
+        return send_file(log_file, as_attachment=True)
+    with open(log_file, 'r') as f:
+        content = f.read()[-100_000:]  # Show last 100k chars
+    return Response(f'<pre style="white-space: pre-wrap; word-break: break-all;">{content}</pre>', mimetype='text/html')
+
+@app.route('/logs/view')
+@login_required
+def logs_viewer():
+    return render_template('logs_viewer.html')
+
+@app.route('/logs/level', methods=['GET', 'POST'])
+@login_required
+def log_level():
+    root_logger = logging.getLogger()
+    if request.method == 'POST':
+        data = request.get_json()
+        level = data.get('level', 'INFO').upper()
+        if level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+            return jsonify({'error': 'Invalid log level'}), 400
+        for logger_name in ['', 'backup_manager', 'werkzeug', 'flask.app']:
+            logging.getLogger(logger_name).setLevel(getattr(logging, level))
+        app.logger.info(f'Log level changed to {level} by {session.get("keyholder_username") or "user"}')
+        return jsonify({'level': level})
+    # GET: return current level
+    level = logging.getLogger().getEffectiveLevel()
+    level_name = logging.getLevelName(level)
+    return jsonify({'level': level_name})
+
+def send_alert_email(subject, body):
+    smtp_server = str(os.environ.get('ALERT_EMAIL_SMTP', ''))
+    smtp_user = str(os.environ.get('ALERT_EMAIL_USER', ''))
+    smtp_pass = str(os.environ.get('ALERT_EMAIL_PASS', ''))
+    email_from = str(os.environ.get('ALERT_EMAIL_FROM', ''))
+    email_to = str(os.environ.get('ALERT_EMAIL_TO', ''))
+    if not all([smtp_server, smtp_user, smtp_pass, email_from, email_to]):
+        app.logger.warning('Alert email not sent: missing SMTP config')
+        return
+    try:
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = email_from
+        msg['To'] = email_to
+        msg.set_content(body)
+        with smtplib.SMTP_SSL(smtp_server) as server:
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        app.logger.info(f'Alert email sent to {email_to}')
+    except Exception as e:
+        app.logger.error(f'Failed to send alert email: {e}')
+
+# Flask error handler for 500 errors
+@app.errorhandler(500)
+def handle_500(e):
+    user = session.get('keyholder_username') or 'unknown'
+    err_msg = f'500 error for user {user}: {e}'
+    app.logger.critical(err_msg, exc_info=True)
+    send_alert_email('ChastiPi CRITICAL ERROR', err_msg)
+    return render_template('500.html', error=str(e)), 500
 
 if __name__ == '__main__':
     # Run on all interfaces for network access

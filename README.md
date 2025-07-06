@@ -133,7 +133,7 @@ Run the script without arguments for an interactive menu:
 
 #### Update Features
 
-- **Automatic Backups**: Creates timestamped backups before updates
+- **Automatic Backups**: Creates timestamped backups before updates using the new backup system
 - **Dependency Management**: Updates Python packages and generates new requirements.txt
 - **Git Integration**: Pulls latest code changes and handles uncommitted changes
 - **Smart Merging**: Automatically merges configuration files and handles conflicts
@@ -180,9 +180,41 @@ The update script includes intelligent merging capabilities to handle conflicts 
 - **Text files**: Keeps both versions for manual review
 
 **Backup Strategy:**
-- Creates timestamped backups before any merge operations
+- Creates timestamped backups before any merge operations using the new backup system
 - Preserves original files with `.conflict` extensions
 - Provides clear instructions for manual resolution if needed
+
+## Backup System
+
+ChastiPi includes a comprehensive backup management system located in the `backups/` directory:
+
+### Quick Backup Commands
+```bash
+# Create backup with timestamp
+./backups/backup.sh create
+
+# Create backup with custom name
+./backups/backup.sh create --name my_backup
+
+# List available backups
+./backups/backup.sh list
+
+# Restore from backup
+./backups/backup.sh restore backup_name
+
+# Create compressed backup
+./backups/backup.sh zip --name important_backup
+```
+
+### Backup Features
+- **Automated Backups**: Timestamped backups with metadata tracking
+- **Comprehensive Coverage**: Backs up all application files and assets
+- **Smart Exclusions**: Excludes temporary files and development artifacts
+- **Restoration Safety**: Creates backup before restoration
+- **Compression Support**: Create compressed zip backups
+- **Integration**: Seamlessly integrates with the update system
+
+For detailed backup documentation, see `backups/README.md`.
 
 ## Configuration
 
@@ -211,6 +243,10 @@ For production use, consider:
 ```
 chastipi-dashboard/
 ├── app.py                 # Main Flask application
+├── backups/               # Backup management system
+│   ├── backup_manager.py  # Python backup manager
+│   ├── backup.sh         # Shell script wrapper
+│   └── README.md         # Backup system documentation
 ├── requirements.txt       # Python dependencies
 ├── README.md             # This file
 ├── run.py                # Startup script
@@ -285,6 +321,23 @@ The application includes error handling and will display appropriate messages if
 - Process list updates every 4 seconds
 - Adjust these intervals in the respective JavaScript files if needed
 - Monitor your Pi's resources while running the dashboards
+
+## Logs
+
+All application, backup, and update actions are logged to the `logs/` directory:
+
+- `logs/app.log`: Main application log (Flask app, API errors, startup, etc.)
+- `logs/backup.log`: All backup actions (creation, restore, delete, errors)
+- `logs/update.log`: All update script actions and errors
+
+Log files are automatically rotated (up to 5 files, 1MB each for Python logs). Each invocation of backup or update scripts is marked with a timestamped header.
+
+**Troubleshooting:**
+- Check `logs/app.log` for Flask app errors or crashes
+- Check `logs/backup.log` for backup/restore issues
+- Check `logs/update.log` for update script problems
+
+You can safely delete old log files if you need to free up space. For more detail, increase the log level in the Python code (e.g., to DEBUG).
 
 ## License
 

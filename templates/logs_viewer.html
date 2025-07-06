@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Viewer - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .log-controls { display: flex; gap: 1em; margin-bottom: 1em; align-items: center; }
+        .log-content { background: #222; color: #eee; padding: 1em; border-radius: 8px; max-height: 60vh; overflow: auto; font-family: monospace; font-size: 14px; }
+        .log-label { font-weight: 600; }
+        .log-download { margin-left: 1em; }
+        .log-level { margin-left: 2em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📜 Log Viewer</h1>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">🔐 Device Dashboard</a>
+                <a href="/system" class="nav-link">🖥️ System Monitor</a>
+                <a href="/keyholder/dashboard" class="nav-link">👑 Keyholder Control</a>
+                <a href="/logs/view" class="nav-link active">📜 Logs</a>
+            </nav>
+        </header>
+        <div class="dashboard">
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>Log Viewer</h3>
+                    <div class="icon">📜</div>
+                </div>
+                <div class="card-content">
+                    <div class="log-controls">
+                        <label class="log-label">Log File:</label>
+                        <select id="log-select">
+                            <option value="app">App Log</option>
+                            <option value="backup">Backup Log</option>
+                            <option value="update">Update Log</option>
+                        </select>
+                        <button id="download-btn" class="log-download">⬇️ Download</button>
+                        <label class="log-label log-level">Log Level:</label>
+                        <select id="log-level-select">
+                            <option value="DEBUG">DEBUG</option>
+                            <option value="INFO" selected>INFO</option>
+                            <option value="WARNING">WARNING</option>
+                            <option value="ERROR">ERROR</option>
+                            <option value="CRITICAL">CRITICAL</option>
+                        </select>
+                        <button id="set-level-btn">Set Level</button>
+                    </div>
+                    <div id="log-content" class="log-content">Loading log...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function loadLog(logType) {
+        fetch(`/logs/${logType}`)
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById('log-content').innerHTML = html;
+            });
+    }
+    document.getElementById('log-select').addEventListener('change', function() {
+        loadLog(this.value);
+    });
+    document.getElementById('download-btn').addEventListener('click', function() {
+        const logType = document.getElementById('log-select').value;
+        window.location = `/logs/${logType}?download=1`;
+    });
+    // Log level controls
+    function getLogLevel() {
+        fetch('/logs/level')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('log-level-select').value = data.level;
+            });
+    }
+    document.getElementById('set-level-btn').addEventListener('click', function() {
+        const level = document.getElementById('log-level-select').value;
+        fetch('/logs/level', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ level })
+        }).then(() => {
+            alert('Log level set to ' + level);
+        });
+    });
+    // Initial load
+    loadLog('app');
+    getLogLevel();
+    </script>
+</body>
+</html> 

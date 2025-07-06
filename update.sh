@@ -5,6 +5,11 @@
 
 set -e  # Exit on any error
 
+# Ensure logs directory exists
+mkdir -p logs
+LOG_FILE="logs/update.log"
+echo -e "\n--- $(date '+%Y-%m-%d %H:%M:%S') [update.sh invocation] $0 $@ ---" >> "$LOG_FILE"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -12,17 +17,15 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
+# Redefine print_status, print_warning, print_error to log to file
 print_status() {
-    echo -e "${GREEN}[INFO]${NC} $1"
+    echo -e "[INFO] $1" | tee -a "$LOG_FILE"
 }
-
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "[WARNING] $1" | tee -a "$LOG_FILE"
 }
-
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "[ERROR] $1" | tee -a "$LOG_FILE"
 }
 
 print_header() {
@@ -45,18 +48,23 @@ check_git_repo() {
 backup_current_state() {
     print_status "Creating backup of current state..."
     
-    # Create backup directory with timestamp
-    BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
-    mkdir -p "$BACKUP_DIR"
-    
-    # Copy important files
-    cp -r templates "$BACKUP_DIR/" 2>/dev/null || true
-    cp -r static "$BACKUP_DIR/" 2>/dev/null || true
-    cp app.py "$BACKUP_DIR/" 2>/dev/null || true
-    cp requirements.txt "$BACKUP_DIR/" 2>/dev/null || true
-    cp run.py "$BACKUP_DIR/" 2>/dev/null || true
-    
-    print_status "Backup created in: $BACKUP_DIR"
+    # Use the new backup system if available
+    if [ -f "backups/backup.sh" ]; then
+        ./backups/backup.sh auto
+    else
+        # Fallback to old backup method
+        BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+        mkdir -p "$BACKUP_DIR"
+        
+        # Copy important files
+        cp -r templates "$BACKUP_DIR/" 2>/dev/null || true
+        cp -r static "$BACKUP_DIR/" 2>/dev/null || true
+        cp app.py "$BACKUP_DIR/" 2>/dev/null || true
+        cp requirements.txt "$BACKUP_DIR/" 2>/dev/null || true
+        cp run.py "$BACKUP_DIR/" 2>/dev/null || true
+        
+        print_status "Backup created in: $BACKUP_DIR"
+    fi
 }
 
 # Function to update dependencies

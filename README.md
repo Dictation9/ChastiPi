@@ -54,8 +54,8 @@ The dual-dashboard system provides:
 
 1. **Clone or download this repository**
    ```bash
-   git clone <your-repo-url>
-   cd raspberry-pi-dashboard
+   git clone https://github.com/Dictation9/ChastiPi.git
+   cd ChastiPi
    ```
 
 2. **Install dependencies**
@@ -73,6 +73,104 @@ The dual-dashboard system provides:
    - Navigate to `http://your-pi-ip:5000`
    - Example: `http://192.168.1.100:5000`
    - Use the navigation to switch between Device Dashboard and System Monitor
+
+## Updates
+
+### Manual Update Script
+
+The project includes a comprehensive update script (`update.sh`) that provides various update options:
+
+#### Quick Update Commands
+
+```bash
+# Update dependencies only
+./update.sh --deps
+
+# Update code from git repository
+./update.sh --code
+
+# Update system packages (Raspberry Pi only)
+./update.sh --system
+
+# Perform full update (dependencies + code + system)
+./update.sh --full
+
+# Restart the application
+./update.sh --restart
+
+# Setup autostart (start on boot)
+./update.sh --autostart
+
+# Remove autostart configuration
+./update.sh --remove-autostart
+
+# Show current status
+./update.sh --status
+
+# Show help
+./update.sh --help
+```
+
+#### Interactive Mode
+
+Run the script without arguments for an interactive menu:
+
+```bash
+./update.sh
+```
+
+#### Update Features
+
+- **Automatic Backups**: Creates timestamped backups before updates
+- **Dependency Management**: Updates Python packages and generates new requirements.txt
+- **Git Integration**: Pulls latest code changes and handles uncommitted changes
+- **Smart Merging**: Automatically merges configuration files and handles conflicts
+- **System Updates**: Updates Raspberry Pi system packages (when applicable)
+- **Application Restart**: Safely stops and restarts the ChastiPi application
+- **Autostart Configuration**: Sets up the application to start automatically on boot
+- **Status Monitoring**: Shows current application status and system information
+- **Error Handling**: Comprehensive error checking and colored output
+
+#### Autostart Options
+
+The update script provides two methods for autostart configuration:
+
+**Raspberry Pi (systemd):**
+- Creates a systemd service file for automatic startup
+- Service automatically restarts if the application crashes
+- Can be managed with standard systemctl commands
+
+**Other Systems (crontab):**
+- Uses crontab @reboot to start the application
+- Creates a startup script in the project directory
+- Can be easily removed via crontab -e
+
+#### Smart Merging Features
+
+The update script includes intelligent merging capabilities to handle conflicts gracefully:
+
+**Configuration File Merging:**
+- Automatically merges INI-style configuration files
+- Preserves local customizations while adding new options
+- Handles JSON and YAML files with appropriate warnings
+- Creates backup versions for manual review
+
+**Conflict Resolution:**
+- Detects and resolves common merge conflicts automatically
+- Uses git merge strategies to favor local changes
+- Provides fallback mechanisms for different file types
+- Creates detailed backups before attempting merges
+
+**File Type Support:**
+- **Python/JavaScript files**: Prefers newer versions while preserving local changes
+- **INI/Config files**: Merges sections and preserves customizations
+- **JSON/YAML files**: Warns about manual merging requirements
+- **Text files**: Keeps both versions for manual review
+
+**Backup Strategy:**
+- Creates timestamped backups before any merge operations
+- Preserves original files with `.conflict` extensions
+- Provides clear instructions for manual resolution if needed
 
 ## Configuration
 
@@ -104,6 +202,7 @@ chastipi-dashboard/
 ├── README.md             # This file
 ├── run.py                # Startup script
 ├── install.sh            # Installation script
+├── update.sh             # Manual update script
 ├── templates/
 │   ├── index.html        # Device management dashboard
 │   └── system.html       # System monitoring dashboard

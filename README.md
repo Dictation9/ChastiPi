@@ -11,6 +11,15 @@ A modern, lightweight web dashboard for chastity device management and Raspberry
 - **Notification System**: Email alerts, SMS, webhook integration
 - **Quick Actions**: Request access, emergency release, device checks, history viewing
 
+### 🔐 Encrypted Key Storage System
+- **Secure Key Management**: Encrypted storage for physical and digital keys
+- **Master Lock Integration**: Support for Master Lock combination safes and similar devices
+- **Access Logging**: Complete audit trail of key access with timestamps and reasons
+- **Emergency Keys**: Special designation for emergency access keys
+- **Location Tracking**: Organize keys by physical location (e.g., "Master Lock safe")
+- **Key Types**: Support for physical, digital, and backup keys
+- **Access Control**: Keyholder-only access with secure authentication
+
 ### 👑 Keyholder Dashboard (Password Protected)
 - **Device Control**: Unlock, lock, and emergency release capabilities
 - **Access Management**: View and manage device access history
@@ -85,6 +94,35 @@ The dual-dashboard system provides:
    - For keyholder access, click "👑 Keyholder Access" and use default credentials:
      - Username: `keyholder`
      - Password: `secure123`
+
+### Key Storage System Setup
+
+The encrypted key storage system requires additional dependencies:
+
+1. **Install cryptography dependencies**
+   ```bash
+   pip install cryptography bcrypt
+   ```
+
+2. **Test the key storage system**
+   ```bash
+   python test_key_storage.py
+   ```
+
+3. **Access key storage management**
+   - Log in as keyholder
+   - Click "🔐 Key Storage" in the control panel
+   - Add your Master Lock safe and other keys
+   - Track access history and manage emergency keys
+
+#### Key Storage Features
+
+- **Encrypted Storage**: All key data is encrypted using Fernet encryption
+- **Master Lock Support**: Perfect for Master Lock combination safes like the [Master Lock Combination Key Safe](https://www.toolstation.com/master-lock-combination-key-safe/p66765)
+- **Access Logging**: Every key access is logged with timestamp and reason
+- **Emergency Keys**: Mark keys for emergency access scenarios
+- **Location Management**: Organize keys by physical location
+- **Key Types**: Support for physical, digital, and backup keys
 
 ## Updates
 

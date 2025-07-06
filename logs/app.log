@@ -1,0 +1,7 @@
+2025-07-06 18:46:59,447 INFO app: ChastiPi app started
+2025-07-06 18:47:16,520 INFO app: ChastiPi app started
+2025-07-06 18:47:26,798 INFO app: ChastiPi app started
+2025-07-06 18:50:03,170 ERROR app: Failed to get keys: 'function' object has no attribute 'get_all_keys'
+2025-07-06 18:50:03,172 ERROR app: Failed to get key stats: 'function' object has no attribute 'get_storage_stats'
+2025-07-06 18:50:38,047 ERROR app: Failed to add key: 'function' object has no attribute 'add_key'
+2025-07-06 18:50:42,543 ERROR app: Failed to get keys: 'function' object has no attribute 'get_all_keys'

@@ -15,6 +15,16 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-pr
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
+# Initialize key storage system
+key_storage = None
+try:
+    from key_storage import KeyStorage
+    key_storage = KeyStorage()
+    app.logger.info('Key storage system initialized successfully')
+except ImportError as e:
+    app.logger.warning(f'Key storage system not available: {e}')
+    key_storage = None
+
 # Raspberry Pi optimized settings
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -84,6 +94,12 @@ def keyholder_logout():
 def keyholder_dashboard():
     """Keyholder dashboard page"""
     return render_template('keyholder_dashboard.html')
+
+@app.route('/keyholder/keys')
+@login_required
+def key_storage():
+    """Key storage management page"""
+    return render_template('key_storage.html')
 
 @app.route('/api/chastity-status')
 def chastity_status():
@@ -506,6 +522,173 @@ def log_level():
     level_name = logging.getLevelName(level)
     return jsonify({'level': level_name})
 
+# Key Storage API Endpoints
+@app.route('/api/keys', methods=['GET'])
+@login_required
+def get_keys():
+    """Get all keys (keyholder only)"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        keys = key_storage.get_all_keys()
+        return jsonify(keys)
+    except Exception as e:
+        app.logger.error(f'Failed to get keys: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/<int:key_id>', methods=['GET'])
+@login_required
+def get_key(key_id):
+    """Get specific key details"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        key = key_storage.get_key(key_id)
+        if not key:
+            return jsonify({'error': 'Key not found'}), 404
+        
+        return jsonify(key)
+    except Exception as e:
+        app.logger.error(f'Failed to get key {key_id}: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys', methods=['POST'])
+@login_required
+def add_key():
+    """Add a new key"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        data = request.get_json()
+        required_fields = ['name', 'description', 'location']
+        
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        key_data = key_storage.add_key(
+            key_name=data['name'],
+            key_description=data['description'],
+            key_location=data['location'],
+            key_type=data.get('type', 'physical'),
+            access_notes=data.get('access_notes', ''),
+            emergency_access=data.get('emergency_access', False)
+        )
+        
+        return jsonify(key_data), 201
+    except Exception as e:
+        app.logger.error(f'Failed to add key: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/<int:key_id>', methods=['PUT'])
+@login_required
+def update_key(key_id):
+    """Update key information"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        data = request.get_json()
+        key = key_storage.update_key(key_id, **data)
+        
+        return jsonify(key)
+    except Exception as e:
+        app.logger.error(f'Failed to update key {key_id}: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/<int:key_id>', methods=['DELETE'])
+@login_required
+def delete_key(key_id):
+    """Delete a key"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        key_storage.delete_key(key_id)
+        return jsonify({'success': True, 'message': 'Key deleted successfully'})
+    except Exception as e:
+        app.logger.error(f'Failed to delete key {key_id}: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/<int:key_id>/access', methods=['POST'])
+@login_required
+def access_key(key_id):
+    """Access a key and log the access"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        data = request.get_json()
+        access_reason = data.get('reason', '')
+        
+        access_result = key_storage.access_key(key_id, access_reason)
+        
+        return jsonify(access_result)
+    except Exception as e:
+        app.logger.error(f'Failed to access key {key_id}: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/access-history')
+@login_required
+def get_key_access_history():
+    """Get key access history"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        limit = request.args.get('limit', 50, type=int)
+        history = key_storage.get_access_history(limit)
+        
+        return jsonify(history)
+    except Exception as e:
+        app.logger.error(f'Failed to get access history: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/emergency')
+@login_required
+def get_emergency_keys():
+    """Get all emergency access keys"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        emergency_keys = key_storage.get_emergency_keys()
+        return jsonify(emergency_keys)
+    except Exception as e:
+        app.logger.error(f'Failed to get emergency keys: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/stats')
+@login_required
+def get_key_stats():
+    """Get key storage statistics"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        stats = key_storage.get_storage_stats()
+        return jsonify(stats)
+    except Exception as e:
+        app.logger.error(f'Failed to get key stats: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keys/location/<location>')
+@login_required
+def get_keys_by_location(location):
+    """Get keys at a specific location"""
+    try:
+        if not key_storage:
+            return jsonify({'error': 'Key storage not available'}), 500
+        
+        keys = key_storage.get_keys_by_location(location)
+        return jsonify(keys)
+    except Exception as e:
+        app.logger.error(f'Failed to get keys by location: {e}')
+        return jsonify({'error': str(e)}), 500
+
 def send_alert_email(subject, body):
     smtp_server = str(os.environ.get('ALERT_EMAIL_SMTP', ''))
     smtp_user = str(os.environ.get('ALERT_EMAIL_USER', ''))
@@ -539,4 +722,4 @@ def handle_500(e):
 
 if __name__ == '__main__':
     # Run on all interfaces for network access
-    app.run(host='0.0.0.0', port=5000, debug=False) 
+    app.run(host='0.0.0.0', port=5001, debug=False) 

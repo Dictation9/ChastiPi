@@ -182,7 +182,7 @@ handle_merge_conflicts() {
     print_warning "Merge conflicts detected. Attempting to resolve automatically..."
     
     # Check for common conflict patterns and resolve them
-    for file in *.py *.js *.html *.css *.txt *.ini *.json *.yaml *.yml 2>/dev/null; do
+    for file in *.py *.js *.html *.css *.txt *.ini *.json *.yaml *.yml; do
         if [ -f "$file" ] && grep -q "<<<<<<< HEAD" "$file"; then
             print_status "Resolving conflicts in $file..."
             

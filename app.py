@@ -1,14 +1,31 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_session import Session
 import os
 import psutil
 import platform
 from datetime import datetime
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
+app.config['SESSION_TYPE'] = 'filesystem'
+Session(app)
 
 # Raspberry Pi optimized settings
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Keyholder credentials (in production, use proper authentication)
+KEYHOLDER_USERNAME = os.environ.get('KEYHOLDER_USERNAME', 'keyholder')
+KEYHOLDER_PASSWORD = os.environ.get('KEYHOLDER_PASSWORD', 'secure123')
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'keyholder_logged_in' not in session:
+            return redirect(url_for('keyholder_login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -19,6 +36,35 @@ def index():
 def system():
     """System monitoring dashboard"""
     return render_template('system.html')
+
+@app.route('/keyholder/login', methods=['GET', 'POST'])
+def keyholder_login():
+    """Keyholder login page"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == KEYHOLDER_USERNAME and password == KEYHOLDER_PASSWORD:
+            session['keyholder_logged_in'] = True
+            session['keyholder_username'] = username
+            return redirect(url_for('keyholder_dashboard'))
+        else:
+            return render_template('keyholder_login.html', error='Invalid credentials')
+    
+    return render_template('keyholder_login.html')
+
+@app.route('/keyholder/logout')
+def keyholder_logout():
+    """Keyholder logout"""
+    session.pop('keyholder_logged_in', None)
+    session.pop('keyholder_username', None)
+    return redirect(url_for('keyholder_login'))
+
+@app.route('/keyholder/dashboard')
+@login_required
+def keyholder_dashboard():
+    """Keyholder dashboard page"""
+    return render_template('keyholder_dashboard.html')
 
 @app.route('/api/chastity-status')
 def chastity_status():
@@ -248,6 +294,155 @@ def update_status():
             'recent_logs': recent_logs
         })
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Keyholder-specific API endpoints
+@app.route('/api/keyholder/device-control', methods=['POST'])
+@login_required
+def keyholder_device_control():
+    """API endpoint for keyholder device control"""
+    try:
+        data = request.get_json()
+        action = data.get('action')
+        
+        if action == 'unlock':
+            # Simulate unlocking device
+            return jsonify({
+                'success': True,
+                'message': 'Device unlocked successfully',
+                'action': 'unlock',
+                'timestamp': datetime.now().isoformat()
+            })
+        elif action == 'lock':
+            # Simulate locking device
+            return jsonify({
+                'success': True,
+                'message': 'Device locked successfully',
+                'action': 'lock',
+                'timestamp': datetime.now().isoformat()
+            })
+        elif action == 'emergency_release':
+            # Simulate emergency release
+            return jsonify({
+                'success': True,
+                'message': 'Emergency release activated',
+                'action': 'emergency_release',
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({'error': 'Invalid action'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keyholder/access-history')
+@login_required
+def keyholder_access_history():
+    """API endpoint to get access history for keyholder"""
+    try:
+        # Simulate access history data
+        history = [
+            {
+                'id': 1,
+                'action': 'unlock',
+                'timestamp': '2024-01-15T10:30:00',
+                'duration': '2 hours',
+                'reason': 'Cleaning',
+                'approved_by': 'keyholder'
+            },
+            {
+                'id': 2,
+                'action': 'lock',
+                'timestamp': '2024-01-15T12:30:00',
+                'duration': '0',
+                'reason': 'Session ended',
+                'approved_by': 'keyholder'
+            },
+            {
+                'id': 3,
+                'action': 'unlock',
+                'timestamp': '2024-01-12T14:00:00',
+                'duration': '1 hour',
+                'reason': 'Medical check',
+                'approved_by': 'keyholder'
+            }
+        ]
+        
+        return jsonify(history)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keyholder/device-settings', methods=['GET', 'POST'])
+@login_required
+def keyholder_device_settings():
+    """API endpoint for keyholder device settings"""
+    try:
+        if request.method == 'GET':
+            # Return current settings
+            return jsonify({
+                'emergency_enabled': True,
+                'notifications_enabled': True,
+                'auto_lock_enabled': False,
+                'session_timeout': 3600,  # 1 hour in seconds
+                'max_session_duration': 7200,  # 2 hours in seconds
+                'require_approval': True
+            })
+        else:
+            # Update settings
+            data = request.get_json()
+            # In a real implementation, you would save these settings
+            return jsonify({
+                'success': True,
+                'message': 'Settings updated successfully'
+            })
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/keyholder/notifications', methods=['GET', 'POST'])
+@login_required
+def keyholder_notifications():
+    """API endpoint for keyholder notifications"""
+    try:
+        if request.method == 'GET':
+            # Return recent notifications
+            notifications = [
+                {
+                    'id': 1,
+                    'type': 'access_request',
+                    'message': 'Access request received from device',
+                    'timestamp': '2024-01-15T10:25:00',
+                    'read': False
+                },
+                {
+                    'id': 2,
+                    'type': 'device_status',
+                    'message': 'Device locked successfully',
+                    'timestamp': '2024-01-15T12:30:00',
+                    'read': True
+                },
+                {
+                    'id': 3,
+                    'type': 'system_alert',
+                    'message': 'Low battery warning',
+                    'timestamp': '2024-01-15T09:15:00',
+                    'read': False
+                }
+            ]
+            
+            return jsonify(notifications)
+        else:
+            # Mark notification as read
+            data = request.get_json()
+            notification_id = data.get('notification_id')
+            
+            return jsonify({
+                'success': True,
+                'message': f'Notification {notification_id} marked as read'
+            })
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

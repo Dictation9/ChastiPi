@@ -11,6 +11,14 @@ A modern, lightweight web dashboard for chastity device management and Raspberry
 - **Notification System**: Email alerts, SMS, webhook integration
 - **Quick Actions**: Request access, emergency release, device checks, history viewing
 
+### 👑 Keyholder Dashboard (Password Protected)
+- **Device Control**: Unlock, lock, and emergency release capabilities
+- **Access Management**: View and manage device access history
+- **Real-time Monitoring**: Live device status and activity tracking
+- **Notification Center**: View and manage system notifications
+- **Settings Management**: Configure device settings and security options
+- **Session Statistics**: Track usage patterns and session durations
+
 ### 🖥️ System Monitor Dashboard
 - **Real-time System Monitoring**: CPU, memory, and disk usage with live updates
 - **Process Management**: View top processes by CPU usage
@@ -18,7 +26,8 @@ A modern, lightweight web dashboard for chastity device management and Raspberry
 - **Performance Analytics**: Color-coded alerts based on resource usage
 
 ### 🎨 User Experience
-- **Dual Dashboard Architecture**: Separate interfaces for device management and system monitoring
+- **Triple Dashboard Architecture**: Separate interfaces for device management, system monitoring, and keyholder control
+- **Password Protection**: Secure keyholder access with session management
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Raspberry Pi Optimized**: Lightweight and efficient for Pi hardware
 - **Modern UI**: Clean, gradient-based design with smooth animations
@@ -73,6 +82,9 @@ The dual-dashboard system provides:
    - Navigate to `http://your-pi-ip:5000`
    - Example: `http://192.168.1.100:5000`
    - Use the navigation to switch between Device Dashboard and System Monitor
+   - For keyholder access, click "👑 Keyholder Access" and use default credentials:
+     - Username: `keyholder`
+     - Password: `secure123`
 
 ## Updates
 
@@ -188,10 +200,11 @@ You can modify the following in `app.py`:
 ### Security Considerations
 
 For production use, consider:
-- Adding authentication
-- Using HTTPS
-- Running behind a reverse proxy (nginx)
-- Setting up a firewall
+- **Change default credentials**: Update `KEYHOLDER_USERNAME` and `KEYHOLDER_PASSWORD` in `app.py`
+- **Use environment variables**: Set `SECRET_KEY`, `KEYHOLDER_USERNAME`, and `KEYHOLDER_PASSWORD` as environment variables
+- **Enable HTTPS**: Use a reverse proxy (nginx) with SSL certificates
+- **Firewall configuration**: Restrict access to trusted networks
+- **Regular updates**: Keep the system and dependencies updated
 
 ## File Structure
 

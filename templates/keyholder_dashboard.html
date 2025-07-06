@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyholder Dashboard - ChastiPi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .keyholder-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .keyholder-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .keyholder-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .control-panel {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .control-btn.unlock {
+            background: #28a745;
+            color: white;
+        }
+        
+        .control-btn.unlock:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.lock {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .control-btn.lock:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn.emergency {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .control-btn.emergency:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+        
+        .history-section {
+            margin-bottom: 20px;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .history-item.unlock {
+            border-left-color: #28a745;
+        }
+        
+        .history-item.lock {
+            border-left-color: #dc3545;
+        }
+        
+        .history-item.emergency {
+            border-left-color: #ffc107;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-action {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .history-time {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .history-details {
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .notifications-section {
+            margin-bottom: 20px;
+        }
+        
+        .notification-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .notification-item.unread {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .notification-type {
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #667eea;
+        }
+        
+        .notification-time {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .notification-message {
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .settings-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .setting-value {
+            color: #666;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-online {
+            background-color: #28a745;
+        }
+        
+        .status-offline {
+            background-color: #dc3545;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            text-align: right;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="keyholder-header">
+                <h1>👑 Keyholder Dashboard</h1>
+                <p>Device control and access management</p>
+                <a href="/keyholder/logout" class="logout-btn">🚪 Logout</a>
+            </div>
+            <nav class="nav-links">
+                <a href="/" class="nav-link">🔐 Device Dashboard</a>
+                <a href="/system" class="nav-link">🖥️ System Monitor</a>
+                <a href="/keyholder/dashboard" class="nav-link active">👑 Keyholder Control</a>
+            </nav>
+        </header>
+
+        <div class="dashboard">
+            <!-- Device Control Panel -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>🔧 Device Control</h3>
+                    <div class="icon">⚡</div>
+                </div>
+                <div class="card-content">
+                    <div class="control-panel">
+                        <h3>Quick Actions</h3>
+                        <div class="control-buttons">
+                            <button class="control-btn unlock" onclick="controlDevice('unlock')">
+                                🔓 Unlock Device
+                            </button>
+                            <button class="control-btn lock" onclick="controlDevice('lock')">
+                                🔒 Lock Device
+                            </button>
+                            <button class="control-btn emergency" onclick="emergencyRelease()">
+                                🚨 Emergency Release
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Status -->
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Device Status</h3>
+                        <div class="icon">📊</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Status:</span>
+                                <span class="value">
+                                    <span class="status-indicator status-online"></span>
+                                    <span id="device-status">Online</span>
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Lock State:</span>
+                                <span class="value" id="lock-state">Locked</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Time Remaining:</span>
+                                <span class="value" id="time-remaining">2 days, 14 hours</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Last Activity:</span>
+                                <span class="value" id="last-activity">2 hours ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Access Statistics</h3>
+                        <div class="icon">📈</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="chastity-info">
+                            <div class="info-row">
+                                <span class="label">Total Sessions:</span>
+                                <span class="value" id="total-sessions">47</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Average Duration:</span>
+                                <span class="value" id="avg-duration">3.2 hours</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Longest Session:</span>
+                                <span class="value" id="longest-session">5 days</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Current Streak:</span>
+                                <span class="value" id="current-streak">12 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access History -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>📋 Recent Access History</h3>
+                    <div class="icon">📋</div>
+                </div>
+                <div class="card-content">
+                    <div class="history-section" id="access-history">
+                        <!-- History items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>🔔 Notifications</h3>
+                    <div class="icon">🔔</div>
+                </div>
+                <div class="card-content">
+                    <div class="notifications-section" id="notifications">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="card full-width">
+                <div class="card-header">
+                    <h3>⚙️ Device Settings</h3>
+                    <div class="icon">⚙️</div>
+                </div>
+                <div class="card-content">
+                    <div class="settings-section">
+                        <div class="settings-grid" id="device-settings">
+                            <!-- Settings will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Release Modal -->
+    <div id="emergencyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🚨 Emergency Release</div>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p><strong>Warning:</strong> This will immediately unlock the device and bypass all security measures.</p>
+                <p>Are you sure you want to proceed with the emergency release?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmEmergencyRelease()">🚨 Emergency Release</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/keyholder.js') }}"></script>
+</body>
+</html> 

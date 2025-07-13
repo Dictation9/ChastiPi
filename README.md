@@ -89,7 +89,6 @@ The dual-dashboard system provides:
 4. **Access the dashboards**
    - Open your web browser
    - Navigate to `http://your-pi-ip:5000`
-   - Example: `http://192.168.1.100:5000`
    - Use the navigation to switch between Device Dashboard and System Monitor
    - For keyholder access, click "👑 Keyholder Access" and use default credentials:
      - Username: `keyholder`

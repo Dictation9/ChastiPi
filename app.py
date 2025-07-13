@@ -10,6 +10,12 @@ from logging.handlers import RotatingFileHandler
 import smtplib
 from email.message import EmailMessage
 
+# Import dummy data and config flag
+from dummy_data import dummy_device_status, dummy_key_management, dummy_device_access_history
+
+# Configuration flag to control dummy data usage
+USE_DUMMY_DATA = True
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -105,14 +111,16 @@ def key_storage():
 def chastity_status():
     """API endpoint to get chastity device status"""
     try:
+        if USE_DUMMY_DATA:
+            return jsonify(dummy_device_status)
         # This would integrate with actual chastity management features
         return jsonify({
-            'device_connected': True,
-            'lock_status': 'locked',
-            'time_remaining': '2 days, 14 hours',
-            'last_check': '2024-01-15T10:30:00',
-            'keyholder_approved': True,
-            'emergency_available': True
+            'device_connected': False,
+            'lock_status': 'unknown',
+            'time_remaining': None,
+            'last_check': None,
+            'keyholder_approved': False,
+            'emergency_available': False
         })
     except Exception as e:
         app.logger.error(f'/api/chastity-status error: {e}', exc_info=True)
@@ -687,6 +695,38 @@ def get_keys_by_location(location):
         return jsonify(keys)
     except Exception as e:
         app.logger.error(f'Failed to get keys by location: {e}')
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/key-management-summary')
+def key_management_summary():
+    """API endpoint to get key management summary (digital, backup, emergency keys)"""
+    try:
+        if USE_DUMMY_DATA:
+            return jsonify(dummy_key_management)
+        # Replace with real data retrieval logic
+        return jsonify({
+            'digital_keys': 0,
+            'backup_keys': 0,
+            'emergency_keys': 0
+        })
+    except Exception as e:
+        app.logger.error(f'/api/key-management-summary error: {e}', exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/device-access-history')
+def device_access_history():
+    """API endpoint to get device dashboard access history summary"""
+    try:
+        if USE_DUMMY_DATA:
+            return jsonify(dummy_device_access_history)
+        # Replace with real data retrieval logic
+        return jsonify({
+            'last_access': None,
+            'total_sessions': 0,
+            'avg_duration': None
+        })
+    except Exception as e:
+        app.logger.error(f'/api/device-access-history error: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 500
 
 def send_alert_email(subject, body):

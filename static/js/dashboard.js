@@ -8,11 +8,14 @@ class Dashboard {
 
     init() {
         this.updateChastityStatus();
-        
+        this.updateKeyManagement();
+        this.updateAccessHistory();
         // Set up periodic updates
         setInterval(() => {
             this.updateChastityStatus();
-        }, this.updateInterval * 3); // Update chastity status every 6 seconds
+            this.updateKeyManagement();
+            this.updateAccessHistory();
+        }, this.updateInterval * 3); // Update every 6 seconds
     }
 
     async updateSystemInfo() {
@@ -58,6 +61,52 @@ class Dashboard {
         } catch (error) {
             console.error('Error fetching chastity status:', error);
         }
+    }
+
+    async updateKeyManagement() {
+        try {
+            const response = await fetch('/api/key-management-summary');
+            const data = await response.json();
+            if (response.ok) {
+                this.updateKeyManagementDisplay(data);
+            } else {
+                console.error('Failed to fetch key management summary:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching key management summary:', error);
+        }
+    }
+
+    updateKeyManagementDisplay(data) {
+        const digitalKeys = document.getElementById('digital-keys');
+        const backupKeys = document.getElementById('backup-keys');
+        const emergencyKeys = document.getElementById('emergency-keys');
+        if (digitalKeys) digitalKeys.textContent = `${data.digital_keys} Active`;
+        if (backupKeys) backupKeys.textContent = `${data.backup_keys} Available`;
+        if (emergencyKeys) emergencyKeys.textContent = `${data.emergency_keys} Available`;
+    }
+
+    async updateAccessHistory() {
+        try {
+            const response = await fetch('/api/device-access-history');
+            const data = await response.json();
+            if (response.ok) {
+                this.updateAccessHistoryDisplay(data);
+            } else {
+                console.error('Failed to fetch access history:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching access history:', error);
+        }
+    }
+
+    updateAccessHistoryDisplay(data) {
+        const lastAccess = document.getElementById('last-access');
+        const totalSessions = document.getElementById('total-sessions');
+        const avgDuration = document.getElementById('avg-duration');
+        if (lastAccess) lastAccess.textContent = data.last_access || '--';
+        if (totalSessions) totalSessions.textContent = data.total_sessions || '--';
+        if (avgDuration) avgDuration.textContent = data.avg_duration || '--';
     }
 
     updateMetrics(data) {

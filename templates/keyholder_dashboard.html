@@ -514,7 +514,14 @@
                 <div class="card-content">
                     <div class="settings-section">
                         <div class="settings-grid" id="device-settings">
-                            <!-- Settings will be loaded here -->
+                            <div class="setting-item">
+                                <span class="setting-label">Use Dummy Data</span>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="dummy-data-toggle" onchange="toggleDummyData(this)" {% if use_dummy_data %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <!-- Other settings will be loaded here -->
                         </div>
                     </div>
                 </div>
@@ -541,5 +548,25 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/keyholder.js') }}"></script>
+    <script>
+        function toggleDummyData(checkbox) {
+            fetch('/api/toggle-dummy-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ use_dummy: checkbox.checked })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Failed to update dummy data setting: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('Error updating dummy data setting: ' + err);
+            });
+        }
+    </script>
 </body>
 </html> 

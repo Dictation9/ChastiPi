@@ -9,12 +9,25 @@ import logging
 from logging.handlers import RotatingFileHandler
 import smtplib
 from email.message import EmailMessage
+import json
 
 # Import dummy data and config flag
 from dummy_data import dummy_device_status, dummy_key_management, dummy_device_access_history
 
-# Configuration flag to control dummy data usage
-USE_DUMMY_DATA = True
+CONFIG_FILE = 'config.json'
+
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as f:
+            return json.load(f)
+    return {'USE_DUMMY_DATA': True}
+
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config, f)
+
+config = load_config()
+USE_DUMMY_DATA = config.get('USE_DUMMY_DATA', True)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
@@ -99,7 +112,7 @@ def keyholder_logout():
 @login_required
 def keyholder_dashboard():
     """Keyholder dashboard page"""
-    return render_template('keyholder_dashboard.html')
+    return render_template('keyholder_dashboard.html', use_dummy_data=USE_DUMMY_DATA)
 
 @app.route('/keyholder/keys')
 @login_required
@@ -728,6 +741,22 @@ def device_access_history():
     except Exception as e:
         app.logger.error(f'/api/device-access-history error: {e}', exc_info=True)
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/toggle-dummy-data', methods=['POST'])
+@login_required
+def toggle_dummy_data():
+    if session.get('keyholder_username') != KEYHOLDER_USERNAME:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    data = request.get_json()
+    use_dummy = data.get('use_dummy')
+    if use_dummy is None:
+        return jsonify({'success': False, 'error': 'Missing use_dummy parameter'}), 400
+    config = load_config()
+    config['USE_DUMMY_DATA'] = bool(use_dummy)
+    save_config(config)
+    global USE_DUMMY_DATA
+    USE_DUMMY_DATA = bool(use_dummy)
+    return jsonify({'success': True, 'use_dummy': USE_DUMMY_DATA})
 
 def send_alert_email(subject, body):
     smtp_server = str(os.environ.get('ALERT_EMAIL_SMTP', ''))

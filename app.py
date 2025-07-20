@@ -34,6 +34,12 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-pr
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
+from flask_babel import Babel, _
+
+app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+app.config['BABEL_TRANSLATION_DIRECTORIES'] = 'translations'
+babel = Babel(app)
+
 # Initialize key storage system
 key_storage = None
 try:
@@ -112,6 +118,7 @@ def keyholder_logout():
 @login_required
 def keyholder_dashboard():
     """Keyholder dashboard page"""
+    title = _("Keyholder Dashboard")
     return render_template('keyholder_dashboard.html', use_dummy_data=USE_DUMMY_DATA)
 
 @app.route('/keyholder/keys')
@@ -788,6 +795,43 @@ def handle_500(e):
     app.logger.critical(err_msg, exc_info=True)
     send_alert_email('ChastiPi CRITICAL ERROR', err_msg)
     return render_template('500.html', error=str(e)), 500
+
+
+@app.route('/keyholder/keys')
+def keyholder_keys():
+    """Display stored lockbox codes"""
+    lockbox_codes = {}
+    if key_storage:
+        try:
+            lockbox_codes = key_storage.keys
+        except Exception as e:
+            app.logger.error(f"Failed to retrieve lockbox codes: {e}")
+
+    return render_template("key_storage.html", lockbox_codes=lockbox_codes)
+
+
+
+@app.route('/keyholder/edit/<user_id>', methods=['POST', 'GET'])
+def edit_lockbox(user_id):
+    if request.method == 'GET':
+        info = key_storage.keys.get(user_id)
+        return render_template("edit_lockbox.html", user_id=user_id, info=info)
+    elif request.method == 'POST':
+        new_code = request.form.get("code")
+        new_label = request.form.get("label")
+        if user_id in key_storage.keys:
+            key_storage.keys[user_id]["code"] = new_code
+            key_storage.keys[user_id]["label"] = new_label
+            key_storage._save_keys()
+        return redirect(url_for('keyholder_keys'))
+
+@app.route('/keyholder/delete/<user_id>', methods=['POST'])
+def delete_lockbox(user_id):
+    if user_id in key_storage.keys:
+        del key_storage.keys[user_id]
+        key_storage._save_keys()
+    return redirect(url_for('keyholder_keys'))
+
 
 if __name__ == '__main__':
     # Run on all interfaces for network access

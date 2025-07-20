@@ -300,3 +300,30 @@ class KeyStorage:
         except Exception as e:
             self.logger.error(f"Failed to get storage stats: {e}")
             return {} 
+
+    def add_lockbox_code(self, user_id, code, label=None):
+        """Manually add a lockbox code for a specific user"""
+        if not user_id or not code:
+            raise ValueError("user_id and code are required")
+
+        user_entry = {
+            "code": code,
+            "label": label or "Unnamed Lockbox",
+            "timestamp": datetime.now().isoformat()
+        }
+
+        self.keys[user_id] = user_entry
+        self._save_keys()
+
+    def get_lockbox_code(self, user_id):
+        """Retrieve a user's lockbox code"""
+        return self.keys.get(user_id)
+
+    def _save_keys(self):
+        """Save encrypted keys to file"""
+        try:
+            with open(self.storage_file, 'wb') as f:
+                f.write(self._encrypt_data(self.keys))
+        except Exception as e:
+            self.logger.error(f"Failed to save keys: {e}")
+            raise

@@ -517,7 +517,33 @@
                         <h4 style="margin-bottom: 12px; color: #333;">Device Settings</h4>
                         <div class="settings-grid" id="device-settings">
                             <div class="setting-item">
-                                <span class="setting-label">Use Dummy Data</span>
+                                <span class="setting-label">Use Dummy
+<div class="info-row">
+    <span class="label">Use Dummy Data:</span>
+    <span class="value">
+        <label class="toggle-switch">
+            <input type="checkbox" id="dummy-data-toggle" onchange="toggleDummyData(this)" {% if use_dummy_data %}checked{% endif %}>
+            <span class="slider round"></span>
+        </label>
+    </span>
+</div>
+<script>
+    function toggleDummyData(checkbox) {
+        fetch("/api/toggle-dummy-data", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ use_dummy: checkbox.checked })
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) { location.reload(); } else {
+            if (!data.success) {
+                alert("Failed to toggle dummy data: " + (data.error || "Unknown error"));
+                checkbox.checked = !checkbox.checked;
+            }
+        });
+    }
+</script>
+ Data</span>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="dummy-data-toggle" onchange="toggleDummyData(this)" {% if use_dummy_data %}checked{% endif %}>
                                     <span class="slider"></span>
@@ -570,5 +596,34 @@
             });
         }
     </script>
+
+<div class="control-panel">
+    <h3>Stored Lockbox Codes</h3>
+    {% if lockbox_codes %}
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #eee;">
+                <th style="text-align: left; padding: 8px;">User ID</th>
+                <th style="text-align: left; padding: 8px;">Code</th>
+                <th style="text-align: left; padding: 8px;">Label</th>
+                <th style="text-align: left; padding: 8px;">Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user_id, info in lockbox_codes.items() %}
+            <tr>
+                <td style="padding: 8px;">{{ user_id }}</td>
+                <td style="padding: 8px;">{{ info.code }}</td>
+                <td style="padding: 8px;">{{ info.label }}</td>
+                <td style="padding: 8px;">{{ info.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No lockbox codes found.</p>
+    {% endif %}
+</div>
+
 </body>
 </html> 

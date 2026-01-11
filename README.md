@@ -4,6 +4,8 @@ A secure, offline lockbox application for Windows with PIN protection, encrypted
 
 This project is designed to be **simple, transparent, and self-contained**, with no accounts, no cloud services, and no telemetry.
 
+This project is currently a WIP and feedback is greatly welcome
+
 ---
 
 ## ✨ Features
@@ -22,7 +24,7 @@ This project is designed to be **simple, transparent, and self-contained**, with
   - Detects system clock rollback
   - Prevents shortening time-locks by changing the date/time
 - 📁 **Offline-first**
-  - All data stored locally in `%APPDATA%\SimpleLockbox`
+  - All data stored locally in `%APPDATA%\Chasti-Lockbox`
 - 🪟 **Native Windows UI**
   - Built with Python + Tkinter
   - Can be packaged as a standalone `.exe`

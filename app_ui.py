@@ -1,7 +1,13 @@
 import base64
+import os
+import sys
 from datetime import datetime, timedelta
 import tkinter as tk
 from tkinter import messagebox, simpledialog
+import threading
+import urllib.request
+import json
+import webbrowser
 
 from config_store import APP_DIR, DATA_FILE, load_config, save_config
 from crypto_box import (
@@ -11,11 +17,35 @@ from crypto_box import (
 )
 from time_lock import parse_lock_until, format_remaining, validate_system_time, add_months
 
+APP_NAME = "Chasti-Lockbox"
+VERSION = "1.1.0"
+
+GITHUB_OWNER = "Dictation9"
+GITHUB_REPO = "Chasti-Lockbox"
+
+
+def resource_path(rel_path: str) -> str:
+    """
+    Returns an absolute path to a resource file, working both:
+    - when running from source, and
+    - when packaged with PyInstaller (sys._MEIPASS)
+    """
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, rel_path)  # type: ignore[attr-defined]
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), rel_path)
+
 
 class LockboxApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Chasti Lockbox")
+
+        # Set window icon (top-left). Requires icon.ico included in build.
+        try:
+            self.root.iconbitmap(resource_path("icon.ico"))
+        except Exception:
+            pass
+
+        self.root.title(APP_NAME)
         self.root.geometry("700x420")
 
         self.cfg = load_config()
@@ -25,12 +55,92 @@ class LockboxApp:
         self.data = {"items": []}
 
         self.is_time_locked = False
-
         self.override_session_active = False
         self.override_keep_lock = False
 
         self.countdown_label = None
+        self.latest_release_url = None
+        self.update_status_label = None
+        self.open_updates_btn = None
+
         self.frame_login()
+
+    # ---------------- Update checker ----------------
+
+    def _version_tuple(self, v: str):
+        v = (v or "").strip().lstrip("v").split("+")[0]
+        parts = v.split(".")
+        out = []
+        for p in parts:
+            try:
+                out.append(int(p))
+            except ValueError:
+                out.append(0)
+        while len(out) < 3:
+            out.append(0)
+        return tuple(out[:3])
+
+    def fetch_latest_release(self):
+        url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest"
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={"User-Agent": f"{APP_NAME}/{VERSION}"}
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            tag = data.get("tag_name")
+            html_url = data.get("html_url") or f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases"
+            return tag, html_url
+        except Exception:
+            return None, None
+
+    def start_update_check(self):
+        if not self.update_status_label:
+            return
+
+        self.update_status_label.config(text="Checking for updates…", fg="gray")
+        self.latest_release_url = None
+
+        def worker():
+            tag, url = self.fetch_latest_release()
+            if not tag:
+                self.root.after(0, lambda: self.update_status_label.config(
+                    text="Update check failed (offline?)",
+                    fg="gray"
+                ))
+                # Allow opening releases page even if check failed
+                if self.open_updates_btn:
+                    self.root.after(0, lambda: self.open_updates_btn.config(state="normal"))
+                return
+
+            current = self._version_tuple(VERSION)
+            latest = self._version_tuple(tag)
+
+            def apply():
+                self.latest_release_url = url
+                if latest > current:
+                    self.update_status_label.config(
+                        text=f"Update available: {tag} (you have v{VERSION})",
+                        fg="orange"
+                    )
+                    if self.open_updates_btn:
+                        self.open_updates_btn.config(state="normal")
+                else:
+                    self.update_status_label.config(
+                        text=f"Up to date (v{VERSION})",
+                        fg="green"
+                    )
+                    if self.open_updates_btn:
+                        self.open_updates_btn.config(state="disabled")
+
+            self.root.after(0, apply)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def open_updates_page(self):
+        url = self.latest_release_url or f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases"
+        webbrowser.open(url)
 
     # ---------------- Login Screen ----------------
 
@@ -41,7 +151,7 @@ class LockboxApp:
         frm = tk.Frame(self.root, padx=20, pady=20)
         frm.pack(fill="both", expand=True)
 
-        tk.Label(frm, text="Chasti Lockbox", font=("Segoe UI", 18, "bold")).pack(pady=(0, 10))
+        tk.Label(frm, text=APP_NAME, font=("Segoe UI", 18, "bold")).pack(pady=(0, 10))
 
         self.countdown_label = tk.Label(frm, font=("Segoe UI", 11, "bold"))
         self.countdown_label.pack(anchor="w", pady=(0, 8))
@@ -65,9 +175,27 @@ class LockboxApp:
             side="left", expand=True, fill="x"
         )
 
+        # --- Update check UI ---
+        update_row = tk.Frame(frm)
+        update_row.pack(fill="x", pady=(8, 0))
+
+        self.update_status_label = tk.Label(update_row, text=f"{APP_NAME} v{VERSION}", fg="gray")
+        self.update_status_label.pack(side="left")
+
+        btns = tk.Frame(update_row)
+        btns.pack(side="right")
+
+        tk.Button(btns, text="Check Updates", command=self.start_update_check).pack(side="left", padx=(0, 6))
+
+        self.open_updates_btn = tk.Button(
+            btns, text="Open Releases", command=self.open_updates_page, state="disabled"
+        )
+        self.open_updates_btn.pack(side="left")
+
         tk.Label(frm, text=f"Data folder: {APP_DIR}", fg="gray").pack(side="bottom", anchor="w")
 
         self.update_time_lock_countdown()
+        self.start_update_check()
 
     def update_time_lock_countdown(self):
         lock_until_dt = parse_lock_until(self.cfg.get("lock_until"))
@@ -89,7 +217,6 @@ class LockboxApp:
     # ---------------- Data I/O ----------------
 
     def load_data(self):
-        import os
         if not os.path.exists(DATA_FILE):
             self.data = {"items": []}
             return
@@ -282,7 +409,6 @@ class LockboxApp:
         if secret is None:
             return
 
-        # Store consistently as "secret" for compatibility
         self.data["items"].append({"title": title.strip(), "secret": secret})
         self.save_data()
         self.refresh_list()
@@ -331,7 +457,6 @@ class LockboxApp:
         old_key = derive_key(old_pin, self.salt)
         new_key = derive_key(new_pin, self.salt)
 
-        import os
         try:
             if os.path.exists(DATA_FILE):
                 with open(DATA_FILE, "rb") as f:
@@ -379,14 +504,11 @@ class LockboxApp:
     # ---------------- Time Lock ----------------
 
     def ask_duration_components(self):
-        """Modal popup with 5 boxes: Months, Weeks, Days, Hours, Minutes.
-        Returns (months, weeks, days, hours, minutes) as ints, or None if cancelled.
-        Blank fields are treated as 0.
-        """
+        """Modal popup with 5 boxes: Months, Weeks, Days, Hours, Minutes."""
         win = tk.Toplevel(self.root)
         win.title("Set Time Lock")
         win.resizable(False, False)
-        win.grab_set()  # modal
+        win.grab_set()
 
         frm = tk.Frame(win, padx=14, pady=14)
         frm.pack(fill="both", expand=True)
@@ -426,7 +548,6 @@ class LockboxApp:
                     messagebox.showerror("Invalid duration", "Please enter at least one non-zero value.", parent=win)
                     return
 
-                # Keep input intuitive (encourage using the larger units)
                 if minutes > 59 or hours > 23:
                     messagebox.showerror(
                         "Out of range",
@@ -455,7 +576,6 @@ class LockboxApp:
 
         entries["months"].focus()
 
-        # Center on parent
         win.update_idletasks()
         x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (win.winfo_width() // 2)
         y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (win.winfo_height() // 2)
@@ -463,7 +583,6 @@ class LockboxApp:
 
         self.root.wait_window(win)
         return result["value"]
-
 
     def set_time_lock(self):
         if not validate_system_time(self.cfg):
@@ -479,7 +598,6 @@ class LockboxApp:
             return
 
         months, weeks, days, hours, minutes = picked
-
         now = datetime.now()
         lock_until_dt = add_months(now, months) + timedelta(
             weeks=weeks, days=days, hours=hours, minutes=minutes
@@ -492,6 +610,7 @@ class LockboxApp:
             "Time Lock Set",
             f"Locked until {lock_until_dt.strftime('%Y-%m-%d %H:%M:%S')}."
         )
+
 
 def run_app():
     root = tk.Tk()

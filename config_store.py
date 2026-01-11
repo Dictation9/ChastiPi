@@ -2,7 +2,7 @@ import json
 import os
 import base64
 
-APP_DIR = os.path.join(os.environ.get("APPDATA", "."), "SimpleLockbox")
+APP_DIR = os.path.join(os.environ.get("APPDATA", "."), "Chasti-Lockbox")
 os.makedirs(APP_DIR, exist_ok=True)
 
 DATA_FILE = os.path.join(APP_DIR, "lockbox.dat")

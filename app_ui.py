@@ -9,6 +9,8 @@ import urllib.request
 import json
 import webbrowser
 
+from audit_log import append_audit_event
+
 from config_store import APP_DIR, DATA_FILE, load_config, save_config
 from crypto_box import (
     derive_key, hash_pin,
@@ -18,7 +20,7 @@ from crypto_box import (
 from time_lock import parse_lock_until, format_remaining, validate_system_time, add_months
 
 APP_NAME = "Chasti-Lockbox"
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 
 GITHUB_OWNER = "Dictation9"
 GITHUB_REPO = "Chasti-Lockbox"
@@ -36,6 +38,10 @@ def resource_path(rel_path: str) -> str:
 
 
 class LockboxApp:
+    def audit(self, event_type: str, **details):
+        # Best-effort; never blocks UI
+        append_audit_event(APP_DIR, event_type, details)
+
     def __init__(self, root: tk.Tk):
         self.root = root
 
@@ -63,6 +69,7 @@ class LockboxApp:
         self.update_status_label = None
         self.open_updates_btn = None
 
+        self.audit("app_started", version=VERSION)
         self.frame_login()
 
     # ---------------- Update checker ----------------
@@ -109,7 +116,6 @@ class LockboxApp:
                     text="Update check failed (offline?)",
                     fg="gray"
                 ))
-                # Allow opening releases page even if check failed
                 if self.open_updates_btn:
                     self.root.after(0, lambda: self.open_updates_btn.config(state="normal"))
                 return
@@ -139,8 +145,20 @@ class LockboxApp:
         threading.Thread(target=worker, daemon=True).start()
 
     def open_updates_page(self):
-        url = self.latest_release_url or f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases"
+        url = self.latest_release_url or f"https://github.com/Dictation9/Chasti-Lockbox/releases"
         webbrowser.open(url)
+
+    # ---------------- Audit log viewer ----------------
+
+    def open_audit_log(self):
+        path = os.path.join(APP_DIR, "audit.log.jsonl")
+        if not os.path.exists(path):
+            messagebox.showinfo("Audit Log", "No audit log file yet.")
+            return
+        try:
+            os.startfile(path)  # Windows
+        except Exception:
+            messagebox.showerror("Audit Log", f"Could not open:\n{path}")
 
     # ---------------- Login Screen ----------------
 
@@ -186,12 +204,10 @@ class LockboxApp:
         btns.pack(side="right")
 
         tk.Button(btns, text="Check Updates", command=self.start_update_check).pack(side="left", padx=(0, 6))
-
-        self.open_updates_btn = tk.Button(
-            btns, text="Open Releases", command=self.open_updates_page, state="disabled"
-        )
+        self.open_updates_btn = tk.Button(btns, text="Open Releases", command=self.open_updates_page, state="disabled")
         self.open_updates_btn.pack(side="left")
 
+        # Data location
         tk.Label(frm, text=f"Data folder: {APP_DIR}", fg="gray").pack(side="bottom", anchor="w")
 
         self.update_time_lock_countdown()
@@ -231,6 +247,7 @@ class LockboxApp:
         except CryptoInvalidToken:
             messagebox.showerror("Decrypt error", "Could not decrypt data. Wrong PIN or corrupted file.")
             self.data = {"items": []}
+            self.audit("decrypt_failed")
 
     def save_data(self):
         blob = encrypt_data(self.key, self.data)
@@ -241,6 +258,7 @@ class LockboxApp:
 
     def unlock(self):
         if not validate_system_time(self.cfg):
+            self.audit("clock_tamper_detected")
             messagebox.showerror(
                 "Clock Tampering Detected",
                 "System time appears to have been set backwards.\n\n"
@@ -252,21 +270,25 @@ class LockboxApp:
         pin = self.pin_entry.get().strip()
         if len(pin) < 4:
             messagebox.showerror("PIN too short", "Use at least 4 digits/characters.")
+            self.audit("unlock_failed", reason="pin_too_short")
             return
 
         lock_until_dt = parse_lock_until(self.cfg.get("lock_until"))
         if lock_until_dt and datetime.now() < lock_until_dt:
             remaining = lock_until_dt - datetime.now()
             messagebox.showerror("Time Locked", f"This lockbox is time-locked for {format_remaining(remaining)}.")
+            self.audit("unlock_blocked", reason="time_lock_active")
             return
 
         if self.cfg["pin_hash"] is None:
             self.cfg["pin_hash"] = hash_pin(pin, self.salt)
             save_config(self.cfg)
             messagebox.showinfo("PIN set", "PIN created. Unlocking lockbox...")
+            self.audit("pin_set")
         else:
             if hash_pin(pin, self.salt) != self.cfg["pin_hash"]:
                 messagebox.showerror("Wrong PIN", "That PIN is incorrect.")
+                self.audit("unlock_failed", reason="wrong_pin")
                 return
 
         self.key = derive_key(pin, self.salt)
@@ -275,6 +297,7 @@ class LockboxApp:
         self.override_session_active = False
         self.override_keep_lock = False
 
+        self.audit("unlock_success", method="pin")
         self.frame_main()
 
     def override_action_choice(self) -> str:
@@ -288,6 +311,7 @@ class LockboxApp:
 
     def override_unlock(self):
         if not validate_system_time(self.cfg):
+            self.audit("clock_tamper_detected")
             messagebox.showerror(
                 "Clock Tampering Detected",
                 "System time appears to have been set backwards.\n\n"
@@ -299,23 +323,28 @@ class LockboxApp:
         lock_until_dt = parse_lock_until(self.cfg.get("lock_until"))
         if not lock_until_dt or datetime.now() >= lock_until_dt:
             messagebox.showinfo("Not time-locked", "No active time lock right now.")
+            self.audit("override_failed", reason="no_time_lock_active")
             return
 
         if not self.cfg.get("override_pin_hash"):
             messagebox.showerror("No Override PIN", "No override PIN has been set yet.")
+            self.audit("override_failed", reason="no_override_pin_set")
             return
 
         override_pin = self.pin_entry.get().strip()
         if len(override_pin) < 4:
             messagebox.showerror("PIN too short", "Use at least 4 digits/characters.")
+            self.audit("override_failed", reason="override_pin_too_short")
             return
 
         if hash_pin(override_pin, self.salt) != self.cfg["override_pin_hash"]:
             messagebox.showerror("Wrong Override PIN", "That override PIN is incorrect.")
+            self.audit("override_failed", reason="wrong_override_pin")
             return
 
         action = self.override_action_choice()
         if action == "cancel":
+            self.audit("override_cancelled")
             return
 
         real_pin = simpledialog.askstring(
@@ -324,14 +353,17 @@ class LockboxApp:
             show="•"
         )
         if not real_pin:
+            self.audit("override_failed", reason="real_pin_missing")
             return
         if self.cfg["pin_hash"] is None or hash_pin(real_pin, self.salt) != self.cfg["pin_hash"]:
             messagebox.showerror("Wrong PIN", "Normal PIN is incorrect.")
+            self.audit("override_failed", reason="wrong_real_pin")
             return
 
         if action == "clear":
             self.cfg["lock_until"] = None
             save_config(self.cfg)
+            self.audit("time_lock_cleared", via="override")
 
         self.key = derive_key(real_pin, self.salt)
         self.load_data()
@@ -339,6 +371,7 @@ class LockboxApp:
         self.override_session_active = True
         self.override_keep_lock = (action == "keep")
 
+        self.audit("override_success", action=action)
         self.frame_main()
 
     # ---------------- Main Screen ----------------
@@ -369,6 +402,7 @@ class LockboxApp:
         tk.Button(bottom, text="Add", command=self.add_item, width=10).pack(side="left")
         tk.Button(bottom, text="View", command=self.view_item, width=10).pack(side="left", padx=6)
         tk.Button(bottom, text="Delete", command=self.delete_item, width=10).pack(side="left")
+        tk.Button(bottom, text="View Audit Log", command=self.open_audit_log, width=14).pack(side="left", padx=6)
 
         tk.Button(bottom, text="Set Time Lock", command=self.set_time_lock).pack(side="right")
         tk.Button(bottom, text="Set/Change Override PIN", command=self.set_override_pin).pack(side="right", padx=6)
@@ -387,6 +421,7 @@ class LockboxApp:
         self.refresh_list()
 
     def relock_now(self):
+        self.audit("relock")
         self.key = None
         self.data = {"items": []}
         self.override_session_active = False
@@ -396,12 +431,12 @@ class LockboxApp:
     def refresh_list(self):
         self.listbox.delete(0, tk.END)
         for it in self.data["items"]:
-            self.listbox.insert(tk.END, it["title"])
+            self.listbox.insert(tk.END, it.get("title", ""))
 
     # ---------------- Item Operations ----------------
 
     def add_item(self):
-        title = simpledialog.askstring("Title", "Entry title:")
+        title = simpledialog.askstring("Title/Date", "Entry title/Date:")
         if not title:
             return
 
@@ -413,6 +448,8 @@ class LockboxApp:
         self.save_data()
         self.refresh_list()
 
+        self.audit("item_added", title=title.strip())
+
     def view_item(self):
         idx = self.listbox.curselection()
         if not idx:
@@ -420,8 +457,11 @@ class LockboxApp:
             return
 
         item = self.data["items"][idx[0]]
+        title = item.get("title", "Item")
         val = item.get("secret") or item.get("Lockbox code") or ""
-        messagebox.showinfo(item.get("title", "Item"), val)
+        messagebox.showinfo(title, val)
+
+        self.audit("item_viewed", title=title)
 
     def delete_item(self):
         idx = self.listbox.curselection()
@@ -429,10 +469,12 @@ class LockboxApp:
             messagebox.showinfo("Select one", "Pick an item first.")
             return
         item = self.data["items"][idx[0]]
-        if messagebox.askyesno("Delete", f"Delete '{item.get('title', 'Item')}'?"):
+        title = item.get("title", "")
+        if messagebox.askyesno("Delete", f"Delete '{title or 'Item'}'?"):
             self.data["items"].pop(idx[0])
             self.save_data()
             self.refresh_list()
+            self.audit("item_deleted", title=title)
 
     # ---------------- PIN Management ----------------
 
@@ -442,16 +484,19 @@ class LockboxApp:
             return
         if self.cfg["pin_hash"] is None or hash_pin(old_pin, self.salt) != self.cfg["pin_hash"]:
             messagebox.showerror("Wrong PIN", "Current PIN is incorrect.")
+            self.audit("pin_change_failed", reason="wrong_current_pin")
             return
 
         new_pin = simpledialog.askstring("Change PIN", "Enter new PIN:", show="•")
         if not new_pin or len(new_pin) < 4:
             messagebox.showerror("Bad PIN", "New PIN must be at least 4 characters.")
+            self.audit("pin_change_failed", reason="new_pin_invalid")
             return
 
         confirm = simpledialog.askstring("Change PIN", "Confirm new PIN:", show="•")
         if new_pin != confirm:
             messagebox.showerror("Mismatch", "New PIN entries did not match.")
+            self.audit("pin_change_failed", reason="confirm_mismatch")
             return
 
         old_key = derive_key(old_pin, self.salt)
@@ -466,6 +511,7 @@ class LockboxApp:
                 data = {"items": []}
         except CryptoInvalidToken:
             messagebox.showerror("Error", "Could not decrypt current vault with old PIN.")
+            self.audit("pin_change_failed", reason="decrypt_failed")
             return
 
         with open(DATA_FILE, "wb") as f:
@@ -478,6 +524,7 @@ class LockboxApp:
         self.data = data
         self.refresh_list()
         messagebox.showinfo("Success", "PIN updated.")
+        self.audit("pin_changed")
 
     def set_override_pin(self):
         cur = simpledialog.askstring("Override PIN", "Enter your normal PIN first:", show="•")
@@ -485,21 +532,25 @@ class LockboxApp:
             return
         if self.cfg["pin_hash"] is None or hash_pin(cur, self.salt) != self.cfg["pin_hash"]:
             messagebox.showerror("Wrong PIN", "Normal PIN is incorrect.")
+            self.audit("override_pin_set_failed", reason="wrong_normal_pin")
             return
 
         new_pin = simpledialog.askstring("Override PIN", "Enter NEW override PIN:", show="•")
         if not new_pin or len(new_pin) < 4:
             messagebox.showerror("Bad PIN", "Override PIN must be at least 4 characters.")
+            self.audit("override_pin_set_failed", reason="override_pin_invalid")
             return
 
         confirm = simpledialog.askstring("Override PIN", "Confirm override PIN:", show="•")
         if new_pin != confirm:
             messagebox.showerror("Mismatch", "Override PIN entries did not match.")
+            self.audit("override_pin_set_failed", reason="confirm_mismatch")
             return
 
         self.cfg["override_pin_hash"] = hash_pin(new_pin, self.salt)
         save_config(self.cfg)
         messagebox.showinfo("Saved", "Override PIN set/updated.")
+        self.audit("override_pin_set")
 
     # ---------------- Time Lock ----------------
 
@@ -586,6 +637,7 @@ class LockboxApp:
 
     def set_time_lock(self):
         if not validate_system_time(self.cfg):
+            self.audit("clock_tamper_detected")
             messagebox.showerror(
                 "Clock Tampering Detected",
                 "System time appears to have been set backwards.\n\n"
@@ -605,6 +657,12 @@ class LockboxApp:
 
         self.cfg["lock_until"] = lock_until_dt.isoformat(timespec="seconds")
         save_config(self.cfg)
+
+        self.audit(
+            "time_lock_set",
+            lock_until=self.cfg.get("lock_until"),
+            months=months, weeks=weeks, days=days, hours=hours, minutes=minutes
+        )
 
         messagebox.showinfo(
             "Time Lock Set",

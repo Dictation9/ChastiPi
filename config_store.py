@@ -1,8 +1,46 @@
 import json
 import os
 import base64
+import sys
 
-APP_DIR = os.path.join(os.environ.get("APPDATA", "."), "Chasti-Lockbox")
+APP_FOLDER_NAME = "Chasti-Lockbox"
+PORTABLE_FLAG_NAME = "portable.flag"
+PORTABLE_DATA_DIR_NAME = "data"
+
+
+def _app_base_dir() -> str:
+    """
+    Where the running program lives:
+    - When running as a PyInstaller EXE: folder containing the EXE
+    - When running from source: folder containing this file
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def _is_portable_mode() -> bool:
+    """
+    Portable mode is enabled when a file named 'portable.flag'
+    exists in the same folder as the EXE (or project when running from source).
+    """
+    return os.path.exists(os.path.join(_app_base_dir(), PORTABLE_FLAG_NAME))
+
+
+def _get_app_dir() -> str:
+    """
+    Returns the directory where config + vault data are stored.
+    """
+    if _is_portable_mode():
+        # Store beside the app (USB-friendly)
+        return os.path.join(_app_base_dir(), PORTABLE_DATA_DIR_NAME)
+
+    # Normal installed mode: store in AppData
+    appdata = os.environ.get("APPDATA", ".")
+    return os.path.join(appdata, APP_FOLDER_NAME)
+
+
+APP_DIR = _get_app_dir()
 os.makedirs(APP_DIR, exist_ok=True)
 
 DATA_FILE = os.path.join(APP_DIR, "lockbox.dat")
@@ -11,8 +49,7 @@ CONFIG_FILE = os.path.join(APP_DIR, "config.json")
 
 def load_config():
     if not os.path.exists(CONFIG_FILE):
-        import os as _os
-        salt = _os.urandom(16)
+        salt = os.urandom(16)
         return {
             "salt": base64.b64encode(salt).decode("utf-8"),
             "pin_hash": None,
